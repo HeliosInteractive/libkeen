@@ -26,3 +26,7 @@
 *.exe
 *.out
 *.app
+
+# convenience for in-source builders
+/build
+/include/keen/version.hpp
