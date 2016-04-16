@@ -54,7 +54,7 @@ SET( LIBKEEN_SOURCES
   "${LIBKEEN_SOURCE}/keen.cpp" )
 
 ADD_LIBRARY(
-  libkeen SHARED
+  libkeen.static STATIC
   ${LIBKEEN_HEADERS}
   ${LIBKEEN_SOURCES} )
 
