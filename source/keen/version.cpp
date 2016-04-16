@@ -1,21 +1,20 @@
 #include "keen/version.hpp"
 
 namespace libkeen {
-namespace version {
 
-int getMajor()
+int version::getMajor()
 {
     return MAJOR;
 }
 
-int getMinor()
+int version::getMinor()
 {
     return MINOR;
 }
 
-int getPatch()
+int version::getPatch()
 {
     return PATCH;
 }
 
-}}
+}
