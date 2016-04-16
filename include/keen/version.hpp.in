@@ -1,0 +1,14 @@
+#pragma once
+
+namespace libkeen {
+namespace version {
+
+const int MAJOR = ${LIBKEEN_MAJOR};
+const int MINOR = ${LIBKEEN_MINOR};
+const int PATCH = ${LIBKEEN_PATCH};
+
+int getMajor();
+int getMinor();
+int getPatch();
+
+}}
