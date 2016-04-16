@@ -39,6 +39,7 @@ SET( LIBKEEN_HEADERS
   "${LIBKEEN_INCLUDE}/keen/version.hpp"
   "${LIBKEEN_INCLUDE}/keen/config.hpp"
   "${LIBKEEN_INCLUDE}/keen/client.hpp"
+  "${LIBKEEN_INCLUDE}/keen/cache.hpp"
   "${LIBKEEN_INCLUDE}/keen.hpp" )
 
 SET( LIBKEEN_SOURCES
@@ -49,6 +50,7 @@ SET( LIBKEEN_SOURCES
   "${LIBKEEN_SOURCE}/keen/version.cpp"
   "${LIBKEEN_SOURCE}/keen/config.cpp"
   "${LIBKEEN_SOURCE}/keen/client.cpp"
+  "${LIBKEEN_SOURCE}/keen/cache.cpp"
   "${LIBKEEN_SOURCE}/keen.cpp" )
 
 ADD_LIBRARY(
