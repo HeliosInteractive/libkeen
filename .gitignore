@@ -30,3 +30,8 @@
 # convenience for in-source builders
 /build
 /include/keen/version.hpp
+
+# Checked in binaries
+!/deps/curl/lib/*/*.lib
+!/deps/curl/bin/*/*.dll
+!/deps/openssl/bin/*/*.dll
