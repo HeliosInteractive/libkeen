@@ -1,6 +1,7 @@
 #pragma once
 
 #include <sstream>
+#include <vector>
 #include <memory>
 #include <string>
 #include <mutex>
@@ -8,11 +9,15 @@
 namespace libkeen {
 namespace internal {
 
+using LoggerRef     = std::shared_ptr< class Logger >;
+using LoggerRefs    = std::vector< LoggerRef >;
+
 class Logger
 {
 public:
     Logger              (const std::string& type);
     void                log(const std::string& message);
+    static void         pull(LoggerRefs& container);
 
 private:
     std::mutex          mMutex;

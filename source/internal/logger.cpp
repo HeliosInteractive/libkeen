@@ -34,6 +34,17 @@ void Logger::log(const std::string& message)
         << message << std::endl;
 }
 
+void Logger::pull(LoggerRefs& container)
+{
+    if (!container.empty())
+        container.clear();
+
+    container.push_back(loggers::debug());
+    container.push_back(loggers::error());
+    container.push_back(loggers::warn());
+    container.push_back(loggers::info());
+}
+
 std::shared_ptr<Logger> loggers::debug()
 {
     static std::shared_ptr<Logger> debug_logger = std::make_shared<Logger>("debug");
