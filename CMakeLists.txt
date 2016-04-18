@@ -24,11 +24,20 @@ IF( MSVC )
     -D_CRT_SECURE_NO_WARNINGS )
 ENDIF()
 
+ADD_DEFINITIONS(
+  -DCURL_STATICLIB
+  -DSQLITE_THREADSAFE=2 )
+
+SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
+  "${LIBKEEN_ROOT}/tools/share/cmake" )
+INCLUDE( FindLibCURL REQUIRED )
+
 INCLUDE_DIRECTORIES(
   "${LIBKEEN_DEPS}/asio/asio/include"
   "${LIBKEEN_DEPS}/sqlite"
   "${LIBKEEN_SOURCE}/internal"
   "${LIBKEEN_INCLUDE}"
+  "${LibCURL_INCLUDE_DIR}"
 )
 
 CONFIGURE_FILE(
@@ -39,20 +48,25 @@ SET( LIBKEEN_HEADERS
   "${LIBKEEN_INCLUDE}/keen/version.hpp"
   "${LIBKEEN_INCLUDE}/keen/config.hpp"
   "${LIBKEEN_INCLUDE}/keen/client.hpp"
+  "${LIBKEEN_INCLUDE}/keen/cache.hpp"
   "${LIBKEEN_INCLUDE}/keen.hpp" )
 
 SET( LIBKEEN_SOURCES
+  "${LIBKEEN_DEPS}/sqlite/sqlite3.c"
   "${LIBKEEN_SOURCE}/internal/logger.hpp"
   "${LIBKEEN_SOURCE}/internal/logger.cpp"
+  "${LIBKEEN_SOURCE}/internal/curl.hpp"
+  "${LIBKEEN_SOURCE}/internal/curl.cpp"
   "${LIBKEEN_SOURCE}/internal/core.hpp"
   "${LIBKEEN_SOURCE}/internal/core.cpp"
   "${LIBKEEN_SOURCE}/keen/version.cpp"
   "${LIBKEEN_SOURCE}/keen/config.cpp"
   "${LIBKEEN_SOURCE}/keen/client.cpp"
+  "${LIBKEEN_SOURCE}/keen/cache.cpp"
   "${LIBKEEN_SOURCE}/keen.cpp" )
 
 ADD_LIBRARY(
-  libkeen SHARED
+  libkeen.static STATIC
   ${LIBKEEN_HEADERS}
   ${LIBKEEN_SOURCES} )
 

@@ -1,0 +1,25 @@
+IF (MSVC)
+
+SET( LibCURL_ROOT "${LIBKEEN_DEPS}/curl" )
+SET( LibCURL_LIBRARY_DIR "${LibCURL_ROOT}/lib" )
+
+FIND_PATH( LibCURL_INCLUDE_DIR
+  PATHS ${LibCURL_ROOT}
+  NAMES "curl/curl.h"
+  PATH_SUFFIXES "include")
+
+# CPU Architecture detection
+INCLUDE( DetectTargetArch REQUIRED )
+DETECT_TARGET_ARCH( ARCH )
+
+IF( ARCH STREQUAL "i386" )
+  FIND_LIBRARY( LibCURL_LIBRARY libcurl PATHS "${LibCURL_LIBRARY_DIR}/win32" )
+ELSEIF( ARCH STREQUAL "x86_64" )
+  FIND_LIBRARY( LibCURL_LIBRARY libcurl PATHS "${LibCURL_LIBRARY_DIR}/win64" )
+ELSE()
+  MESSAGE( FATAL_ERROR "Unknown arch (${ARCH}) detected." )
+ENDIF()
+
+ELSE()
+  MESSAGE( FATAL_ERROR "Not implemented." )
+ENDIF()

@@ -1,0 +1,17 @@
+#pragma once
+
+namespace libkeen
+{
+
+struct version
+{
+    static const int MAJOR = ${LIBKEEN_MAJOR};
+    static const int MINOR = ${LIBKEEN_MINOR};
+    static const int PATCH = ${LIBKEEN_PATCH};
+
+    static int getMajor();
+    static int getMinor();
+    static int getPatch();
+};
+
+}
