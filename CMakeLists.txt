@@ -54,7 +54,7 @@ SET( LIBKEEN_HEADERS
 SET( LIBKEEN_SOURCES
   "${LIBKEEN_DEPS}/sqlite/sqlite3.c"
   "${LIBKEEN_SOURCE}/internal/scoped.hpp"
-  "${LIBKEEN_SOURCE}/internal/scoped.ipp"
+  "${LIBKEEN_SOURCE}/internal/scoped.cpp"
   "${LIBKEEN_SOURCE}/internal/logger.hpp"
   "${LIBKEEN_SOURCE}/internal/logger.cpp"
   "${LIBKEEN_SOURCE}/internal/curl.hpp"
