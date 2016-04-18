@@ -60,7 +60,29 @@ void Cache::push(const std::string& name, const std::string& event)
     }
 }
 
-void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count)
+bool Cache::exists(const std::string& name, const std::string& event) const
+{
+    if (!mConnection) return false;
+
+    sqlite3_stmt *stmt = nullptr;
+    Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
+
+    std::stringstream ss;
+    ss << "SELECT * FROM cache WHERE name='" << name << "' AND event='" << event << "' LIMIT 1";
+
+    if (sqlite3_prepare_v2(mConnection, ss.str().c_str(), -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        LOG_ERROR("Unable to prepare the statement.");
+        return false;
+    }
+
+    if (sqlite3_step(stmt) == SQLITE_ROW)
+        return true;
+    else
+        return false;
+}
+
+void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count) const
 {
     if (!mConnection) return;
     if (!records.empty()) records.clear();

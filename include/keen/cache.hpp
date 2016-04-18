@@ -17,7 +17,8 @@ public:
     ~Cache();
     static Sqlite3Ref   ref();
     void                push(const std::string& name, const std::string& event);
-    void                pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count);
+    bool                exists(const std::string& name, const std::string& event) const;
+    void                pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count) const;
     void                remove(const std::string& name, const std::string& event);
 
 private:
