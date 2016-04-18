@@ -45,7 +45,7 @@ void Cache::push(const std::string& name, const std::string& event)
     if (!connected()) return;
     
     sqlite3_stmt *stmt = nullptr;
-    Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
+    internal::Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
 
     std::stringstream ss;
     ss << "INSERT OR IGNORE INTO cache (name, event) VALUES ('" << name << "','" << event << "')";
@@ -68,7 +68,7 @@ bool Cache::exists(const std::string& name, const std::string& event) const
     if (!connected()) return false;
 
     sqlite3_stmt *stmt = nullptr;
-    Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
+    internal::Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
 
     std::stringstream ss;
     ss << "SELECT * FROM cache WHERE name='" << name << "' AND event='" << event << "' LIMIT 1";
@@ -91,7 +91,7 @@ void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsig
     if (!records.empty()) records.clear();
 
     sqlite3_stmt *stmt = nullptr;
-    Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
+    internal::Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
 
     std::stringstream ss;
     ss << "SELECT name, event FROM cache LIMIT " << count;
@@ -115,7 +115,7 @@ void Cache::remove(const std::string& name, const std::string& event)
     if (!connected()) return;
 
     sqlite3_stmt *stmt = nullptr;
-    Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
+    internal::Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
 
     std::stringstream ss;
     ss << "DELETE FROM cache WHERE name='" << name << "' AND event='" << event << "'";

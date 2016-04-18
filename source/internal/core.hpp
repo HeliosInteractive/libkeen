@@ -8,13 +8,16 @@
 #include <string>
 
 namespace libkeen {
+
+class Cache;
+
 namespace internal {
 
 using CoreRef       = std::shared_ptr< class Core >;
 using LoggerRef     = std::shared_ptr< class Logger >;
 using LoggerRefs    = std::vector< LoggerRef >;
 using LibCurlRef    = std::shared_ptr< class LibCurl >;
-using Sqlite3Ref    = std::shared_ptr< class Cache >;
+using Sqlite3Ref    = std::shared_ptr< Cache >;
 
 class Core
 {
