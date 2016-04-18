@@ -20,12 +20,6 @@ Scoped<T>::Scoped(T*& pointer)
 {}
 
 template<typename T>
-void Scoped<T>::onScopeEnd()
-{
-    delete mPointer;
-}
-
-template<typename T>
 Scoped<T>::~Scoped()
 {
     onScopeEnd();
