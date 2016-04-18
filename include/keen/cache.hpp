@@ -7,7 +7,6 @@
 struct sqlite3;
 
 namespace libkeen {
-namespace internal {
 
 using Sqlite3Ref = std::shared_ptr< class Cache >;
 
@@ -27,4 +26,4 @@ private:
     sqlite3             *mConnection;
 };
 
-}}
+}

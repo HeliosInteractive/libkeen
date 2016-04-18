@@ -4,7 +4,6 @@
 #include "sqlite3.h"
 
 namespace libkeen {
-namespace internal {
 
 Cache::Cache()
     : mConnection(nullptr)
@@ -139,4 +138,4 @@ bool Cache::connected() const
     return mConnection != nullptr;
 }
 
-}}
+}
