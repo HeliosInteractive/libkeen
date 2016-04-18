@@ -1,6 +1,7 @@
 #include "core.hpp"
 #include "curl.hpp"
 #include "logger.hpp"
+#include "keen/cache.hpp"
 
 #include <mutex>
 
@@ -46,6 +47,7 @@ void Core::release()
 Core::Core()
     : mWork(mIoService)
     , mLibCurlRef(LibCurl::ref())
+    , mSqlite3Ref(Cache::ref())
 {
     Logger::pull(mLoggerRefs);
 

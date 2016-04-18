@@ -14,6 +14,7 @@ using CoreRef       = std::shared_ptr< class Core >;
 using LoggerRef     = std::shared_ptr< class Logger >;
 using LoggerRefs    = std::vector< LoggerRef >;
 using LibCurlRef    = std::shared_ptr< class LibCurl >;
+using Sqlite3Ref    = std::shared_ptr< class Cache >;
 
 class Core
 {
@@ -37,6 +38,7 @@ private:
     std::vector<std::thread>    mThreadPool;
     LoggerRefs                  mLoggerRefs;
     LibCurlRef                  mLibCurlRef;
+    Sqlite3Ref                  mSqlite3Ref;
 };
 
 }}
