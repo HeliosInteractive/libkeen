@@ -24,10 +24,13 @@ IF( MSVC )
     -D_CRT_SECURE_NO_WARNINGS )
 ENDIF()
 
+ADD_DEFINITIONS(
+  -DCURL_STATICLIB
+  -DSQLITE_THREADSAFE=2 )
+
 SET( CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH}
   "${LIBKEEN_ROOT}/tools/share/cmake" )
 INCLUDE( FindLibCURL REQUIRED )
-ADD_DEFINITIONS( -DCURL_STATICLIB )
 
 INCLUDE_DIRECTORIES(
   "${LIBKEEN_DEPS}/asio/asio/include"
@@ -49,6 +52,7 @@ SET( LIBKEEN_HEADERS
   "${LIBKEEN_INCLUDE}/keen.hpp" )
 
 SET( LIBKEEN_SOURCES
+  "${LIBKEEN_DEPS}/sqlite/sqlite3.c"
   "${LIBKEEN_SOURCE}/internal/logger.hpp"
   "${LIBKEEN_SOURCE}/internal/logger.cpp"
   "${LIBKEEN_SOURCE}/internal/curl.hpp"
