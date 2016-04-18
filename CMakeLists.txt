@@ -51,6 +51,8 @@ SET( LIBKEEN_HEADERS
 SET( LIBKEEN_SOURCES
   "${LIBKEEN_SOURCE}/internal/logger.hpp"
   "${LIBKEEN_SOURCE}/internal/logger.cpp"
+  "${LIBKEEN_SOURCE}/internal/curl.hpp"
+  "${LIBKEEN_SOURCE}/internal/curl.cpp"
   "${LIBKEEN_SOURCE}/internal/core.hpp"
   "${LIBKEEN_SOURCE}/internal/core.cpp"
   "${LIBKEEN_SOURCE}/keen/version.cpp"
