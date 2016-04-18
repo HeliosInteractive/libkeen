@@ -12,17 +12,21 @@ Cache::Cache()
     if (sqlite3_open("libkeen.db", &mConnection) != SQLITE_OK)
     {
         LOG_ERROR("Establishing database connection failed.");
+        mConnection = nullptr;
         return;
     }
     
-    if (mConnection)
+    if (connected())
     {
         std::string create_table_query = "CREATE TABLE IF NOT EXISTS cache (id INTEGER PRIMARY KEY, name VARCHAR(256), event VARCHAR(4096), UNIQUE(name, event))";
         if (sqlite3_exec(mConnection, create_table_query.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK)
             LOG_ERROR("Unable to create the cache table.");
     }
     else
+    {
         LOG_ERROR("Connection to database does not exist.");
+        mConnection = nullptr;
+    }
 }
 
 Sqlite3Ref Cache::ref()
@@ -33,13 +37,13 @@ Sqlite3Ref Cache::ref()
 
 Cache::~Cache()
 {
-    if (mConnection) sqlite3_close(mConnection);
+    if (connected()) sqlite3_close(mConnection);
     mConnection = nullptr;
 }
 
 void Cache::push(const std::string& name, const std::string& event)
 {
-    if (!mConnection) return;
+    if (!connected()) return;
     
     sqlite3_stmt *stmt = nullptr;
     Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
@@ -62,7 +66,7 @@ void Cache::push(const std::string& name, const std::string& event)
 
 bool Cache::exists(const std::string& name, const std::string& event) const
 {
-    if (!mConnection) return false;
+    if (!connected()) return false;
 
     sqlite3_stmt *stmt = nullptr;
     Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
@@ -84,7 +88,7 @@ bool Cache::exists(const std::string& name, const std::string& event) const
 
 void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count) const
 {
-    if (!mConnection) return;
+    if (!connected()) return;
     if (!records.empty()) records.clear();
 
     sqlite3_stmt *stmt = nullptr;
@@ -109,7 +113,7 @@ void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsig
 
 void Cache::remove(const std::string& name, const std::string& event)
 {
-    if (!mConnection) return;
+    if (!connected()) return;
 
     sqlite3_stmt *stmt = nullptr;
     Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
@@ -128,6 +132,11 @@ void Cache::remove(const std::string& name, const std::string& event)
         LOG_ERROR("Unable to step the statement.");
         return;
     }
+}
+
+bool Cache::connected() const
+{
+    return mConnection != nullptr;
 }
 
 }}

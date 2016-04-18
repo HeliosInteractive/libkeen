@@ -20,6 +20,7 @@ public:
     bool                exists(const std::string& name, const std::string& event) const;
     void                pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count) const;
     void                remove(const std::string& name, const std::string& event);
+    bool                connected() const;
 
 private:
     Cache();
