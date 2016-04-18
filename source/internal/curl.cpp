@@ -1,20 +1,6 @@
 #include "curl.hpp"
-#include <curl/curl.h>
-
-namespace {
-struct ScopeReleaseCurlPointer
-{
-    ScopeReleaseCurlPointer(CURL *ptr) : mPointer(ptr) {};
-    ~ScopeReleaseCurlPointer() { if (mPointer) curl_easy_cleanup(mPointer); };
-    CURL *mPointer = nullptr;
-};
-struct ScopeReleaseCurlSlist
-{
-    ScopeReleaseCurlSlist(curl_slist *ptr) : mPointer(ptr) {};
-    ~ScopeReleaseCurlSlist() { if (mPointer) curl_slist_free_all(mPointer); };
-    curl_slist *mPointer = nullptr;
-};
-}
+#include "scoped.hpp"
+#include "curl/curl.h"
 
 namespace libkeen {
 namespace internal {
@@ -33,8 +19,8 @@ bool LibCurl::sendEvent(const std::string& url, const std::string& json)
     {
         curl_slist *headers = nullptr;
 
-        ScopeReleaseCurlPointer scoped_curl(curl);
-        ScopeReleaseCurlSlist   scoped_slist(headers);
+        Scoped<CURL>        scope_bound_curl(curl);
+        Scoped<curl_slist>  scope_bound_slist(headers);
 
         headers = curl_slist_append(headers, "Accept: application/json");
         headers = curl_slist_append(headers, "Content-Type: application/json");
