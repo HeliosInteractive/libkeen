@@ -3,8 +3,18 @@
 
 #include <mutex>
 
+#include <curl/curl.h>
+
 namespace libkeen {
 namespace internal {
+
+class LibCurl
+{
+public:
+    LibCurl() { curl_global_init(CURL_GLOBAL_DEFAULT); }
+    ~LibCurl() { curl_global_cleanup(); }
+    static LibCurlRef ref() { static LibCurlRef instance{ new LibCurl }; return instance; }
+};
 
 CoreRef Core::instance(AccessType type)
 {
@@ -44,6 +54,7 @@ void Core::release()
 
 Core::Core()
     : mWork(mIoService)
+    , mLibCurlRef(LibCurl::ref())
 {
     Logger::pull(mLoggerRefs);
 

@@ -13,6 +13,7 @@ namespace internal {
 using CoreRef       = std::shared_ptr< class Core >;
 using LoggerRef     = std::shared_ptr< class Logger >;
 using LoggerRefs    = std::vector< LoggerRef >;
+using LibCurlRef    = std::shared_ptr< class LibCurl >;
 
 class Core
 {
@@ -35,6 +36,7 @@ private:
     asio::io_service::work      mWork;
     std::vector<std::thread>    mThreadPool;
     LoggerRefs                  mLoggerRefs;
+    LibCurlRef                  mLibCurlRef;
 };
 
 }}
