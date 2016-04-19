@@ -2,6 +2,7 @@
 
 #include "asio.hpp"
 
+#include <atomic>
 #include <memory>
 #include <vector>
 #include <thread>
@@ -10,6 +11,7 @@
 namespace libkeen {
 
 class Cache;
+class Client;
 
 namespace internal {
 
@@ -23,7 +25,8 @@ class Core
 {
 public:
     ~Core();
-    void                        postEvent(const std::string& name, const std::string& data);
+    void                        postEvent(Client& client, const std::string& name, const std::string& data);
+    void                        postEvent(const std::string& url, const std::string& data, const std::function<void()>& callback);
     static unsigned             useCount();
     static CoreRef              instance();
     static void                 release();
@@ -31,6 +34,7 @@ public:
 private:
     enum class AccessType       { Current, Renew, Release };
     static CoreRef              instance(AccessType);
+    void                        cacheMain();
 
 private:
     Core();
@@ -42,6 +46,10 @@ private:
     LoggerRefs                  mLoggerRefs;
     LibCurlRef                  mLibCurlRef;
     Sqlite3Ref                  mSqlite3Ref;
+    std::atomic<bool>           mQuitCache;
+    std::thread                 mCacheThread;
+    unsigned                    mCacheInterval;
+    unsigned                    mCacheSweepCount;
 };
 
 }}

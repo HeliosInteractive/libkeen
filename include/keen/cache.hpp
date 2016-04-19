@@ -15,10 +15,10 @@ class Cache
 public:
     ~Cache();
     static Sqlite3Ref   ref();
-    void                push(const std::string& name, const std::string& event);
-    bool                exists(const std::string& name, const std::string& event) const;
+    void                push(const std::string& url, const std::string& data);
+    bool                exists(const std::string& url, const std::string& data) const;
     void                pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count) const;
-    void                remove(const std::string& name, const std::string& event);
+    void                remove(const std::string& url, const std::string& data);
     bool                connected() const;
     void                clear();
 

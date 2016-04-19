@@ -17,7 +17,7 @@ Cache::Cache()
     
     if (connected())
     {
-        std::string create_table_query = "CREATE TABLE IF NOT EXISTS cache (id INTEGER PRIMARY KEY, name VARCHAR(256), event VARCHAR(4096), UNIQUE(name, event))";
+        std::string create_table_query = "CREATE TABLE IF NOT EXISTS cache (id INTEGER PRIMARY KEY, url VARCHAR(1024), data VARCHAR(4096), UNIQUE(url, data))";
         if (sqlite3_exec(mConnection, create_table_query.c_str(), nullptr, nullptr, nullptr) != SQLITE_OK)
             LOG_ERROR("Unable to create the cache table.");
     }
@@ -40,7 +40,7 @@ Cache::~Cache()
     mConnection = nullptr;
 }
 
-void Cache::push(const std::string& name, const std::string& event)
+void Cache::push(const std::string& url, const std::string& data)
 {
     if (!connected()) return;
     
@@ -48,7 +48,7 @@ void Cache::push(const std::string& name, const std::string& event)
     internal::Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
 
     std::stringstream ss;
-    ss << "INSERT OR IGNORE INTO cache (name, event) VALUES ('" << name << "','" << event << "')";
+    ss << "INSERT OR IGNORE INTO cache (url, data) VALUES ('" << url << "','" << data << "')";
 
     if (sqlite3_prepare_v2(mConnection, ss.str().c_str(), -1, &stmt, nullptr) != SQLITE_OK)
     {
@@ -63,7 +63,7 @@ void Cache::push(const std::string& name, const std::string& event)
     }
 }
 
-bool Cache::exists(const std::string& name, const std::string& event) const
+bool Cache::exists(const std::string& url, const std::string& data) const
 {
     if (!connected()) return false;
 
@@ -71,7 +71,7 @@ bool Cache::exists(const std::string& name, const std::string& event) const
     internal::Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
 
     std::stringstream ss;
-    ss << "SELECT * FROM cache WHERE name='" << name << "' AND event='" << event << "' LIMIT 1";
+    ss << "SELECT * FROM cache WHERE url='" << url << "' AND data='" << data << "' LIMIT 1";
 
     if (sqlite3_prepare_v2(mConnection, ss.str().c_str(), -1, &stmt, nullptr) != SQLITE_OK)
     {
@@ -94,7 +94,7 @@ void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsig
     internal::Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
 
     std::stringstream ss;
-    ss << "SELECT name, event FROM cache LIMIT " << count;
+    ss << "SELECT url, data FROM cache LIMIT " << count;
 
     if (sqlite3_prepare_v2(mConnection, ss.str().c_str(), -1, &stmt, nullptr) != SQLITE_OK)
     {
@@ -104,13 +104,13 @@ void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsig
 
     while (sqlite3_step(stmt) == SQLITE_ROW)
     {
-        std::string name{ reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)) };
+        std::string url{ reinterpret_cast<const char*>(sqlite3_column_text(stmt, 0)) };
         std::string data{ reinterpret_cast<const char*>(sqlite3_column_text(stmt, 1)) };
-        records.push_back(std::make_pair(name, data));
+        records.push_back(std::make_pair(url, data));
     }
 }
 
-void Cache::remove(const std::string& name, const std::string& event)
+void Cache::remove(const std::string& url, const std::string& data)
 {
     if (!connected()) return;
 
@@ -118,7 +118,7 @@ void Cache::remove(const std::string& name, const std::string& event)
     internal::Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
 
     std::stringstream ss;
-    ss << "DELETE FROM cache WHERE name='" << name << "' AND event='" << event << "'";
+    ss << "DELETE FROM cache WHERE url='" << url << "' AND data='" << data << "'";
 
     if (sqlite3_prepare_v2(mConnection, ss.str().c_str(), -1, &stmt, nullptr) != SQLITE_OK)
     {
