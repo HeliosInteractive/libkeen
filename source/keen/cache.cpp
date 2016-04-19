@@ -54,12 +54,6 @@ Cache::Cache()
     }
 }
 
-CacheRef Cache::ref()
-{
-    static CacheRef instance{ new Cache };
-    return instance;
-}
-
 Cache::~Cache()
 {
     if (connected() && sqlite3_close_v2(mConnection) == SQLITE_OK) {

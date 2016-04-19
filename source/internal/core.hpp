@@ -1,6 +1,8 @@
 #pragma once
 
+#include "keen/cache.hpp"
 #include "keen/fwd.hpp"
+#include "curl.hpp"
 
 #include "asio.hpp"
 
@@ -34,8 +36,8 @@ private:
     asio::io_service::work      mWork;
     std::vector<std::thread>    mThreadPool;
     std::vector<LoggerRef>      mLoggerRefs;
-    CurlRef                     mLibCurlRef;
-    CacheRef                    mSqlite3Ref;
+    Curl                        mLibCurl;
+    Cache                       mSqlite3;
 };
 
 }}

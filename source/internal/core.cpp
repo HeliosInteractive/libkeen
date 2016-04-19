@@ -1,7 +1,5 @@
 #include "core.hpp"
-#include "curl.hpp"
 #include "logger.hpp"
-#include "keen/cache.hpp"
 #include "keen/client.hpp"
 
 #include <mutex>
@@ -47,8 +45,6 @@ void Core::release()
 
 Core::Core()
     : mWork(mIoService)
-    , mLibCurlRef(Curl::ref())
-    , mSqlite3Ref(Cache::ref())
 {
     Logger::pull(mLoggerRefs);
 
@@ -114,8 +110,8 @@ void Core::postEvent(Client& client, const std::string& name, const std::string&
 
         mIoService.post([this, url, data]
         {
-            if (!mLibCurlRef->sendEvent(url, data))
-                mSqlite3Ref->push(url, data);
+            if (!mLibCurl.sendEvent(url, data))
+                mSqlite3.push(url, data);
         });
     }
     catch (const std::exception& ex) {
@@ -134,7 +130,7 @@ void Core::postCache(unsigned count)
         mIoService.post([this, count]
         {
             std::vector<std::pair<std::string, std::string>> caches;
-            mSqlite3Ref->pop(caches, count);
+            mSqlite3.pop(caches, count);
 
             LOG_DEBUG("Cache entries trying to send out: " << caches.size());
 
@@ -144,8 +140,8 @@ void Core::postCache(unsigned count)
 
                 mIoService.post([this, entry]
                 {
-                    if (mLibCurlRef->sendEvent(entry.first, entry.second))
-                        mSqlite3Ref->remove(entry.first, entry.second);
+                    if (mLibCurl.sendEvent(entry.first, entry.second))
+                        mSqlite3.remove(entry.first, entry.second);
                 });
             }
         });

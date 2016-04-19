@@ -6,22 +6,28 @@
 
 #include "curl/curl.h"
 
-namespace {
-static std::atomic<bool> CURL_READY{ false };
-}
-
 namespace libkeen {
 namespace internal {
 
-CurlRef Curl::ref()
+class LibCurlHandle
 {
-    static CurlRef instance{ new Curl };
-    return instance;
-}
+public:
+    static std::shared_ptr< LibCurlHandle > ref() {
+        static std::shared_ptr< LibCurlHandle > instance{ new LibCurlHandle };
+        return instance;
+    }
+
+    LibCurlHandle() { mReady = (curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK); }
+    ~LibCurlHandle() { if (isReady()) { curl_global_cleanup(); } }
+    bool isReady() const { return mReady; }
+
+private:
+    bool mReady = false;
+};
 
 bool Curl::sendEvent(const std::string& url, const std::string& json)
 {
-    if (!CURL_READY)
+    if (!!mLibCurlHandle || !mLibCurlHandle->isReady())
     {
         LOG_WARN("cURL is not ready. Invalid operation.");
         return false;
@@ -71,25 +77,10 @@ bool Curl::sendEvent(const std::string& url, const std::string& json)
 }
 
 Curl::Curl()
+    : mLibCurlHandle(LibCurlHandle::ref())
 {
-    if (!CURL_READY && curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK)
-    {
-        CURL_READY = true;
+    if (mLibCurlHandle && mLibCurlHandle->isReady())
         LOG_INFO("cURL is initialized successfully.");
-    }
-}
-
-Curl::~Curl()
-{
-    if (CURL_READY)
-    {
-        curl_global_cleanup();
-        LOG_INFO("cURL is shutdown.");
-    }
-    else
-    {
-        LOG_ERROR("cURL is unable to shutdown.");
-    }
 }
 
 }}
