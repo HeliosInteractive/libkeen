@@ -13,6 +13,7 @@ namespace internal {
 class Logger
 {
 public:
+    ~Logger();
     Logger              (const std::string& type);
     void                log(const std::string& message);
     static void         pull(std::vector<LoggerRef>& container);

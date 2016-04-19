@@ -21,9 +21,16 @@ std::string now()
 namespace libkeen {
 namespace internal {
 
+Logger::~Logger()
+{
+    log("Logger " + mType + " is shutdown.");
+}
+
 Logger::Logger(const std::string& type)
     : mType(type)
-{ /* no-op */ }
+{
+    log("Logger " + mType + " is started.");
+}
 
 void Logger::log(const std::string& message)
 {
