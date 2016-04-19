@@ -7,9 +7,27 @@
 #include <string>
 #include <mutex>
 
+#ifndef LIBKEEN_LOG_TO_CONSOLE
+#   define LIBKEEN_LOG_TO_CONSOLE 1
+#endif
+
+#ifndef LIBKEEN_LOG_TO_LOGFILE
+#   define LIBKEEN_LOG_TO_LOGFILE 1
+#endif
+
 namespace libkeen {
 namespace internal {
 
+/*!
+ * @class Logger
+ * @brief Very simple thread-safe logger.
+ * @note  Appends logs to both a file and cout/cerr
+ * @note  Users must not use this class directly. Users
+ *        must use either one of these macros:
+ *        LOG_DEBUG, LOG_ERROR, LOG_WARN, or LOG_INFO
+ * @note  input to LOG_XX is a C++ style stream:
+ *        LOG_WARN("sample " << variable << " stream");
+ */
 class Logger
 {
 public:

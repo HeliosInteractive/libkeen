@@ -2,17 +2,17 @@
 
 namespace libkeen {
 
-int version::getMajor()
+int Version::getMajor()
 {
     return MAJOR;
 }
 
-int version::getMinor()
+int Version::getMinor()
 {
     return MINOR;
 }
 
-int version::getPatch()
+int Version::getPatch()
 {
     return PATCH;
 }
