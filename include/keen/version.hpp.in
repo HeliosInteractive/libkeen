@@ -3,14 +3,25 @@
 namespace libkeen
 {
 
-struct version
+/*!
+ * @struct  version
+ * @brief   holds information about the compiled
+ *          version of libkeen.
+ */
+struct Version
 {
+    //!< Major version, increased with backward incompatible API changes
     static const int MAJOR = ${LIBKEEN_MAJOR};
+    //!< Minor version, increased with backward compatible API changes
     static const int MINOR = ${LIBKEEN_MINOR};
+    //!< Patch version, increased with bug fixes and patches
     static const int PATCH = ${LIBKEEN_PATCH};
 
+    //! return compiled major version
     static int getMajor();
+    //! return compiled minor version
     static int getMinor();
+    //! return compiled patch version
     static int getPatch();
 };
 

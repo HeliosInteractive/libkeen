@@ -4,7 +4,7 @@
 TEST_CASE("Sanity Check", "[sanity]")
 {
     REQUIRE(1 == 1);
-    REQUIRE(libkeen::version::getMajor() >= 0);
-    REQUIRE(libkeen::version::getMinor() >= 0);
-    REQUIRE(libkeen::version::getPatch() >= 0);
+    REQUIRE(libkeen::Version::getMajor() >= 0);
+    REQUIRE(libkeen::Version::getMinor() >= 0);
+    REQUIRE(libkeen::Version::getPatch() >= 0);
 }
