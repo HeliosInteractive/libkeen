@@ -6,6 +6,17 @@
 #include <chrono>
 #include <ctime>
 
+// by default turn on both file and console
+// logging behaviors.
+
+#ifndef LIBKEEN_LOG_TO_CONSOLE
+#   define LIBKEEN_LOG_TO_CONSOLE 1
+#endif
+
+#ifndef LIBKEEN_LOG_TO_LOGFILE
+#   define LIBKEEN_LOG_TO_LOGFILE 1
+#endif
+
 namespace
 {
 std::string now()
@@ -34,20 +45,24 @@ Logger::Logger(const std::string& type)
 
 void Logger::log(const std::string& message)
 {
+#if LIBKEEN_LOG_TO_CONSOLE || LIBKEEN_LOG_TO_LOGFILE
+
     try {
         std::lock_guard<decltype(mMutex)> lock(mMutex);
-
-        std::cout
-            << "[" << mType << "]["
+        std::stringstream msg;
+        msg << "[" << mType << "]["
             << std::this_thread::get_id() << "]["
             << now() << "]: "
             << message << std::endl;
 
-        std::ofstream("libkeen.log", std::ios_base::app | std::ios_base::out)
-            << "[" << mType << "]["
-            << std::this_thread::get_id() << "]["
-            << now() << "]: "
-            << message << std::endl;
+#if LIBKEEN_LOG_TO_CONSOLE
+        std::cout << msg.str();
+#endif // LIBKEEN_LOG_TO_CONSOLE
+
+#if LIBKEEN_LOG_TO_LOGFILE
+        std::ofstream("libkeen.log", std::ios_base::app | std::ios_base::out) << msg.str();
+#endif // LIBKEEN_LOG_TO_LOGFILE
+
     }
     catch (const std::exception& ex) {
         std::cerr << "Logger failed: " << ex.what() << std::endl;
@@ -55,6 +70,8 @@ void Logger::log(const std::string& message)
     catch (...) {
         std::cerr << "Logger failed." << std::endl;
     }
+
+#endif
 }
 
 void Logger::pull(std::vector<LoggerRef>& container)
