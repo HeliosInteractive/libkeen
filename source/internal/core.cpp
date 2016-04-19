@@ -2,6 +2,7 @@
 #include "curl.hpp"
 #include "logger.hpp"
 #include "keen/cache.hpp"
+#include "keen/client.hpp"
 
 #include <mutex>
 
@@ -79,9 +80,22 @@ Core::~Core()
     }
 }
 
-void Core::postEvent(const std::string& name, const std::string& data)
+void Core::postEvent(Client& client, const std::string& name, const std::string& data)
 {
+    std::stringstream ss;
+    ss  << "https://api.keen.io/3.0/projects/"
+        << client.getConfig().getProjectId()
+        << "/events/"
+        << name
+        << "?api_key="
+        << client.getConfig().getWriteKey();
+    std::string url{ ss.str() };
 
+    mIoService.post([this, url, data]
+    {
+        if (!mLibCurlRef->sendEvent(url, data))
+            mSqlite3Ref->push(url, data);
+    });
 }
 
 unsigned Core::useCount()

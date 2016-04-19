@@ -22,7 +22,7 @@ void Client::setConfig(const Config& config)
 
 void Client::sendEvent(const std::string& name, const std::string& data)
 {
-    // TO DO
+    mCoreRef->postEvent(*this, name, data);
 }
 
 }

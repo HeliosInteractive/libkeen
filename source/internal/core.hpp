@@ -10,6 +10,7 @@
 namespace libkeen {
 
 class Cache;
+class Client;
 
 namespace internal {
 
@@ -23,7 +24,7 @@ class Core
 {
 public:
     ~Core();
-    void                        postEvent(const std::string& name, const std::string& data);
+    void                        postEvent(Client& client, const std::string& name, const std::string& data);
     static unsigned             useCount();
     static CoreRef              instance();
     static void                 release();
