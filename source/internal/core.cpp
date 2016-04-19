@@ -40,6 +40,37 @@ CoreRef Core::instance()
         return instance(AccessType::Current);
 }
 
+void Core::cacheMain()
+{
+    while (!mQuitCache)
+    {
+        try
+        {
+            std::vector<std::pair<std::string, std::string>> caches;
+            mSqlite3Ref->pop(caches, mCacheSweepCount);
+
+            for (auto entry : caches)
+            {
+                mIoService.post([this, entry]
+                {
+                    if (mLibCurlRef->sendEvent(entry.first, entry.second))
+                        mSqlite3Ref->remove(entry.first, entry.second);
+                });
+            }
+        }
+        catch (const std::exception ex)
+        {
+            LOG_ERROR("Cache thread encountered an exception: " << ex.what());
+        }
+        catch(...)
+        {
+            LOG_ERROR("Cache thread encountered an exception.");
+        }
+
+        std::this_thread::sleep_for(std::chrono::seconds(mCacheInterval));
+    }
+}
+
 void Core::release()
 {
     instance(AccessType::Release);
@@ -49,6 +80,9 @@ Core::Core()
     : mWork(mIoService)
     , mLibCurlRef(LibCurl::ref())
     , mSqlite3Ref(Cache::ref())
+    , mQuitCache(false)
+    , mCacheInterval(10)
+    , mCacheSweepCount(10)
 {
     Logger::pull(mLoggerRefs);
 
@@ -66,10 +100,17 @@ Core::Core()
     }
 
     LOG_INFO("Thread pool size: " << mThreadPool.size());
+    LOG_INFO("Starting cache service.");
+
+    mCacheThread = std::thread(std::bind(&Core::cacheMain, this));
 }
 
 Core::~Core()
 {
+    LOG_INFO("Stopping Cache service");
+    mQuitCache = true;
+    mCacheThread.join();
+
     LOG_INFO("Stopping IO service");
     mIoService.stop();
 
@@ -90,11 +131,20 @@ void Core::postEvent(Client& client, const std::string& name, const std::string&
         << "?api_key="
         << client.getConfig().getWriteKey();
     std::string url{ ss.str() };
-
+    
     mIoService.post([this, url, data]
     {
         if (!mLibCurlRef->sendEvent(url, data))
             mSqlite3Ref->push(url, data);
+    });
+}
+
+void Core::postEvent(const std::string& url, const std::string& data, const std::function<void()>& callback)
+{
+    mIoService.post([this, url, data, callback]
+    {
+        if (!mLibCurlRef->sendEvent(url, data))
+            callback();
     });
 }
 
