@@ -1,6 +1,7 @@
 #include "logger.hpp"
 
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <chrono>
 #include <ctime>
@@ -26,12 +27,27 @@ Logger::Logger(const std::string& type)
 
 void Logger::log(const std::string& message)
 {
-    std::lock_guard<decltype(mMutex)> lock(mMutex);
-    std::cout
-        << "[" << mType << "]["
-        << std::this_thread::get_id() << "]["
-        << now() << "]: "
-        << message << std::endl;
+    try {
+        std::lock_guard<decltype(mMutex)> lock(mMutex);
+
+        std::cout
+            << "[" << mType << "]["
+            << std::this_thread::get_id() << "]["
+            << now() << "]: "
+            << message << std::endl;
+
+        std::ofstream("libkeen.log", std::ios_base::app | std::ios_base::out)
+            << "[" << mType << "]["
+            << std::this_thread::get_id() << "]["
+            << now() << "]: "
+            << message << std::endl;
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "Logger failed: " << ex.what() << std::endl;
+    }
+    catch (...) {
+        std::cerr << "Logger failed." << std::endl;
+    }
 }
 
 void Logger::pull(LoggerRefs& container)
