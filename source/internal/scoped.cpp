@@ -1,6 +1,7 @@
 #pragma once
 
 #include "scoped.hpp"
+
 #include "curl/curl.h"
 #include "sqlite3.h"
 
