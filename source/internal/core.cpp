@@ -52,7 +52,9 @@ Core::Core()
 {
     Logger::pull(mLoggerRefs);
 
+    // hardware_concurrency can return zero, in that case one thread is forced
     unsigned num_threads = std::thread::hardware_concurrency();
+
     if (num_threads == 0)
     {
         LOG_WARN("hardware_concurrency returned 0. Forcing one thread.");
@@ -66,55 +68,93 @@ Core::Core()
     }
 
     LOG_INFO("Thread pool size: " << mThreadPool.size());
-    LOG_INFO("Starting cache service.");
 }
 
 Core::~Core()
 {
-    LOG_INFO("Stopping IO service");
-    mIoService.stop();
-
-    for (std::thread& thread : mThreadPool)
+    try
     {
-        LOG_INFO("Shutting down thread " << thread.get_id());
-        thread.join();
+        LOG_INFO("Stopping IO service");
+        mIoService.stop();
+
+        for (std::thread& thread : mThreadPool)
+        {
+            LOG_INFO("Shutting down thread " << thread.get_id());
+            thread.join();
+        }
     }
+    catch (const std::exception& ex)
+    {
+        LOG_WARN("Unable to shutdown the core: " << ex.what());
+        return;
+    }
+    catch (...)
+    {
+        LOG_WARN("Unable to shutdown the core. Giving up");
+        return;
+    }
+
+    LOG_INFO("Core is shutdown.");
 }
 
 void Core::postEvent(Client& client, const std::string& name, const std::string& data)
 {
-    std::stringstream ss;
-    ss  << "https://api.keen.io/3.0/projects/"
-        << client.getConfig().getProjectId()
-        << "/events/"
-        << name
-        << "?api_key="
-        << client.getConfig().getWriteKey();
-    std::string url{ ss.str() };
-    
-    mIoService.post([this, url, data]
+    try
     {
-        if (!mLibCurlRef->sendEvent(url, data))
-            mSqlite3Ref->push(url, data);
-    });
+        std::stringstream ss;
+        ss << "https://api.keen.io/3.0/projects/"
+            << client.getConfig().getProjectId()
+            << "/events/"
+            << name
+            << "?api_key="
+            << client.getConfig().getWriteKey();
+        std::string url{ ss.str() };
+
+        LOG_DEBUG("Attempting to post and event to: " << url << " with data: " << data);
+
+        mIoService.post([this, url, data]
+        {
+            if (!mLibCurlRef->sendEvent(url, data))
+                mSqlite3Ref->push(url, data);
+        });
+    }
+    catch (const std::exception& ex) {
+        LOG_ERROR("Core postEvent threw an exception: " << ex.what());
+    } catch (...) {
+        LOG_ERROR("Core postEvent threw an exception.");
+    }
 }
 
 void Core::postCache(unsigned count)
 {
-    mIoService.post([this, count]
+    try
     {
-        std::vector<std::pair<std::string, std::string>> caches;
-        mSqlite3Ref->pop(caches, count);
+        LOG_DEBUG("Attempting to post cache with count: " << count);
 
-        for (auto entry : caches)
+        mIoService.post([this, count]
         {
-            mIoService.post([this, entry]
+            std::vector<std::pair<std::string, std::string>> caches;
+            mSqlite3Ref->pop(caches, count);
+
+            LOG_DEBUG("Cache entries trying to send out: " << caches.size());
+
+            for (auto entry : caches)
             {
-                if (mLibCurlRef->sendEvent(entry.first, entry.second))
-                    mSqlite3Ref->remove(entry.first, entry.second);
-            });
-        }
-    });
+                LOG_DEBUG("Attempting to post and event to: " << entry.first << " with data: " << entry.second);
+
+                mIoService.post([this, entry]
+                {
+                    if (mLibCurlRef->sendEvent(entry.first, entry.second))
+                        mSqlite3Ref->remove(entry.first, entry.second);
+                });
+            }
+        });
+    }
+    catch (const std::exception& ex) {
+        LOG_ERROR("Core postCache threw an exception: " << ex.what());
+    } catch (...) {
+        LOG_ERROR("Core postCache threw an exception.");
+    }
 }
 
 unsigned Core::useCount()
