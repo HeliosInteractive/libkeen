@@ -4,6 +4,7 @@
 
 #include <memory>
 #include <string>
+#include <vector>
 
 namespace libkeen {
 namespace internal {
@@ -17,6 +18,8 @@ public:
 private:
     std::shared_ptr< class LibCurlHandle >
             mLibCurlHandle;
+    std::vector<LoggerRef>
+            mLoggerRefs;
 };
 
 }}

@@ -17,13 +17,32 @@ public:
         return instance;
     }
 
-    LibCurlHandle() { mReady = (curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK); }
-    ~LibCurlHandle() { if (isReady()) { curl_global_cleanup(); } }
-    bool isReady() const { return mReady; }
+    LibCurlHandle();
+    ~LibCurlHandle();
+    bool isReady() const;
 
 private:
-    bool mReady = false;
+    bool                    mReady = false;
+    std::vector<LoggerRef>  mLoggerRefs;
 };
+
+LibCurlHandle::LibCurlHandle()
+{
+    LOG_INFO("Starting up cURL");
+    internal::Logger::pull(mLoggerRefs);
+    mReady = (curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK);
+}
+
+LibCurlHandle::~LibCurlHandle()
+{
+    LOG_INFO("Shutting down cURL");
+    if (isReady()) { curl_global_cleanup(); }
+}
+
+bool LibCurlHandle::isReady() const
+{
+    return mReady;
+}
 
 bool Curl::sendEvent(const std::string& url, const std::string& json)
 {
@@ -79,6 +98,8 @@ bool Curl::sendEvent(const std::string& url, const std::string& json)
 Curl::Curl()
     : mLibCurlHandle(LibCurlHandle::ref())
 {
+    internal::Logger::pull(mLoggerRefs);
+
     if (mLibCurlHandle && mLibCurlHandle->isReady())
         LOG_INFO("cURL is initialized successfully.");
 }
