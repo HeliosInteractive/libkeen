@@ -2,6 +2,8 @@
 
 #include <memory>
 
+struct sqlite3;
+
 namespace libkeen
 {
 
