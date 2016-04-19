@@ -11,6 +11,13 @@ Cache::Cache()
     // Make sure logger stays alive for our life-time
     internal::Logger::pull(mLoggerRefs);
 
+    if (sqlite3_threadsafe() != SQLITE_CONFIG_SERIALIZED)
+    {
+        LOG_WARN("Sqlite3 engine is not configured as serilized! This causes race conditions");
+        mConnection = nullptr;
+        return;
+    }
+
     // Open a connection to cache database
     if (sqlite3_open("libkeen.db", &mConnection) != SQLITE_OK)
     {
