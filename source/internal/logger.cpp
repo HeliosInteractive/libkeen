@@ -50,7 +50,7 @@ void Logger::log(const std::string& message)
     }
 }
 
-void Logger::pull(LoggerRefs& container)
+void Logger::pull(std::vector<LoggerRef>& container)
 {
     if (!container.empty())
         container.clear();
