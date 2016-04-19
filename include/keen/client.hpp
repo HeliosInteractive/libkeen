@@ -13,12 +13,13 @@ class Client
 {
 public:
     Client();
-    void    setConfig(const Config& config);
-    void    sendEvent(const std::string& name, const std::string& data);
+    const Config&   getConfig() const;
+    void            setConfig(const Config& config);
+    void            sendEvent(const std::string& name, const std::string& data);
 
 private:
-    Config  mConfig;
-    CoreRef mCoreRef;
+    Config          mConfig;
+    CoreRef         mCoreRef;
 };
 
 }

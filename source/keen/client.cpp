@@ -10,6 +10,11 @@ Client::Client()
     /* no-op */
 }
 
+const Config& Client::getConfig() const
+{
+    return mConfig;
+}
+
 void Client::setConfig(const Config& config)
 {
     mConfig = config;
