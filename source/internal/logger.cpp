@@ -1,6 +1,7 @@
 #include "logger.hpp"
 
 #include <iostream>
+#include <fstream>
 #include <iomanip>
 #include <chrono>
 #include <ctime>
@@ -20,21 +21,43 @@ std::string now()
 namespace libkeen {
 namespace internal {
 
+Logger::~Logger()
+{
+    log("Logger " + mType + " is shutdown.");
+}
+
 Logger::Logger(const std::string& type)
     : mType(type)
-{ /* no-op */ }
+{
+    log("Logger " + mType + " is started.");
+}
 
 void Logger::log(const std::string& message)
 {
-    std::lock_guard<decltype(mMutex)> lock(mMutex);
-    std::cout
-        << "[" << mType << "]["
-        << std::this_thread::get_id() << "]["
-        << now() << "]: "
-        << message << std::endl;
+    try {
+        std::lock_guard<decltype(mMutex)> lock(mMutex);
+
+        std::cout
+            << "[" << mType << "]["
+            << std::this_thread::get_id() << "]["
+            << now() << "]: "
+            << message << std::endl;
+
+        std::ofstream("libkeen.log", std::ios_base::app | std::ios_base::out)
+            << "[" << mType << "]["
+            << std::this_thread::get_id() << "]["
+            << now() << "]: "
+            << message << std::endl;
+    }
+    catch (const std::exception& ex) {
+        std::cerr << "Logger failed: " << ex.what() << std::endl;
+    }
+    catch (...) {
+        std::cerr << "Logger failed." << std::endl;
+    }
 }
 
-void Logger::pull(LoggerRefs& container)
+void Logger::pull(std::vector<LoggerRef>& container)
 {
     if (!container.empty())
         container.clear();

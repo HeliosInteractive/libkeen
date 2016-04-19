@@ -1,11 +1,17 @@
 #include "keen/config.hpp"
 
+namespace
+{
+const static std::string EMPTY_STRING{"unassigned"};
+}
+
 namespace libkeen
 {
 
 const std::string& Config::getProjectId() const
 {
-    return mProjectId;
+    if (mProjectId.empty()) return EMPTY_STRING;
+    else return mProjectId;
 }
 
 void Config::setProjectId(const std::string& id)
@@ -16,7 +22,8 @@ void Config::setProjectId(const std::string& id)
 
 const std::string& Config::getWriteKey() const
 {
-    return mWriteKey;
+    if (mWriteKey.empty()) return EMPTY_STRING;
+    else return mWriteKey;
 }
 
 void Config::setWriteKey(const std::string& key)

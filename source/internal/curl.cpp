@@ -1,19 +1,34 @@
+#include <atomic>
+
 #include "curl.hpp"
 #include "scoped.hpp"
+#include "logger.hpp"
+
 #include "curl/curl.h"
+
+namespace {
+static std::atomic<bool> CURL_READY{ false };
+}
 
 namespace libkeen {
 namespace internal {
 
-LibCurlRef LibCurl::ref()
+CurlRef Curl::ref()
 {
-    static LibCurlRef instance{ new LibCurl };
+    static CurlRef instance{ new Curl };
     return instance;
 }
 
-bool LibCurl::sendEvent(const std::string& url, const std::string& json)
+bool Curl::sendEvent(const std::string& url, const std::string& json)
 {
+    if (!CURL_READY)
+    {
+        LOG_WARN("cURL is not ready. Invalid operation.");
+        return;
+    }
+
     bool success = false;
+    LOG_INFO("cURL is about to send an event to: " << url << " with json: " << json);
 
     if (auto curl = curl_easy_init())
     {
@@ -46,17 +61,35 @@ bool LibCurl::sendEvent(const std::string& url, const std::string& json)
         }
     }
 
+    if (success) {
+        LOG_INFO("cURL succesfully sent an event.");
+    } else {
+        LOG_ERROR("cURL failed to send an event.");
+    }
+
     return success;
 }
 
-LibCurl::LibCurl()
+Curl::Curl()
 {
-    curl_global_init(CURL_GLOBAL_DEFAULT);
+    if (!CURL_READY && curl_global_init(CURL_GLOBAL_DEFAULT) == CURLE_OK)
+    {
+        CURL_READY = true;
+        LOG_INFO("cURL is initialized successfully.");
+    }
 }
 
-LibCurl::~LibCurl()
+Curl::~Curl()
 {
-    curl_global_cleanup();
+    if (CURL_READY)
+    {
+        curl_global_cleanup();
+        LOG_INFO("cURL is shutdown.");
+    }
+    else
+    {
+        LOG_ERROR("cURL is unable to shutdown.");
+    }
 }
 
 }}

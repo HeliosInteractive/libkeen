@@ -1,13 +1,10 @@
 #pragma once
 
+#include "keen/fwd.hpp"
 #include "keen/config.hpp"
-#include <memory>
 
 namespace libkeen
 {
-
-namespace internal { class Core; }
-using CoreRef = std::shared_ptr< internal::Core >;
 
 class Client
 {
