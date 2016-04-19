@@ -24,7 +24,7 @@ bool Curl::sendEvent(const std::string& url, const std::string& json)
     if (!CURL_READY)
     {
         LOG_WARN("cURL is not ready. Invalid operation.");
-        return;
+        return false;
     }
 
     bool success = false;
