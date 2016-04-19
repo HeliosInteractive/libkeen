@@ -40,37 +40,6 @@ CoreRef Core::instance()
         return instance(AccessType::Current);
 }
 
-void Core::cacheMain()
-{
-    while (!mQuitCache)
-    {
-        try
-        {
-            std::vector<std::pair<std::string, std::string>> caches;
-            mSqlite3Ref->pop(caches, mCacheSweepCount);
-
-            for (auto entry : caches)
-            {
-                mIoService.post([this, entry]
-                {
-                    if (mLibCurlRef->sendEvent(entry.first, entry.second))
-                        mSqlite3Ref->remove(entry.first, entry.second);
-                });
-            }
-        }
-        catch (const std::exception ex)
-        {
-            LOG_ERROR("Cache thread encountered an exception: " << ex.what());
-        }
-        catch(...)
-        {
-            LOG_ERROR("Cache thread encountered an exception.");
-        }
-
-        std::this_thread::sleep_for(std::chrono::seconds(mCacheInterval));
-    }
-}
-
 void Core::release()
 {
     instance(AccessType::Release);
@@ -78,11 +47,8 @@ void Core::release()
 
 Core::Core()
     : mWork(mIoService)
-    , mLibCurlRef(LibCurl::ref())
+    , mLibCurlRef(Curl::ref())
     , mSqlite3Ref(Cache::ref())
-    , mQuitCache(false)
-    , mCacheInterval(10)
-    , mCacheSweepCount(10)
 {
     Logger::pull(mLoggerRefs);
 
@@ -101,16 +67,10 @@ Core::Core()
 
     LOG_INFO("Thread pool size: " << mThreadPool.size());
     LOG_INFO("Starting cache service.");
-
-    mCacheThread = std::thread(std::bind(&Core::cacheMain, this));
 }
 
 Core::~Core()
 {
-    LOG_INFO("Stopping Cache service");
-    mQuitCache = true;
-    mCacheThread.join();
-
     LOG_INFO("Stopping IO service");
     mIoService.stop();
 
@@ -139,12 +99,21 @@ void Core::postEvent(Client& client, const std::string& name, const std::string&
     });
 }
 
-void Core::postEvent(const std::string& url, const std::string& data, const std::function<void()>& callback)
+void Core::postCache(unsigned count)
 {
-    mIoService.post([this, url, data, callback]
+    mIoService.post([this, count]
     {
-        if (!mLibCurlRef->sendEvent(url, data))
-            callback();
+        std::vector<std::pair<std::string, std::string>> caches;
+        mSqlite3Ref->pop(caches, count);
+
+        for (auto entry : caches)
+        {
+            mIoService.post([this, entry]
+            {
+                if (mLibCurlRef->sendEvent(entry.first, entry.second))
+                    mSqlite3Ref->remove(entry.first, entry.second);
+            });
+        }
     });
 }
 

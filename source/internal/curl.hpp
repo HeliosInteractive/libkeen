@@ -1,22 +1,20 @@
 #pragma once
 
-#include <memory>
+#include "keen/fwd.hpp"
 #include <string>
 
 namespace libkeen {
 namespace internal {
 
-using LibCurlRef = std::shared_ptr< class LibCurl >;
-
-class LibCurl
+class Curl
 {
 public:
-    ~LibCurl();
-    static LibCurlRef   ref();
-    bool                sendEvent(const std::string& url, const std::string& json);
+    ~Curl();
+    static CurlRef  ref();
+    bool            sendEvent(const std::string& url, const std::string& json);
 
 private:
-    LibCurl();
+    Curl();
 };
 
 }}

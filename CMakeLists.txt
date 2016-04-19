@@ -49,6 +49,7 @@ SET( LIBKEEN_HEADERS
   "${LIBKEEN_INCLUDE}/keen/config.hpp"
   "${LIBKEEN_INCLUDE}/keen/client.hpp"
   "${LIBKEEN_INCLUDE}/keen/cache.hpp"
+  "${LIBKEEN_INCLUDE}/keen/fwd.hpp"
   "${LIBKEEN_INCLUDE}/keen.hpp" )
 
 SET( LIBKEEN_SOURCES

@@ -5,13 +5,13 @@
 namespace libkeen {
 namespace internal {
 
-LibCurlRef LibCurl::ref()
+CurlRef Curl::ref()
 {
-    static LibCurlRef instance{ new LibCurl };
+    static CurlRef instance{ new Curl };
     return instance;
 }
 
-bool LibCurl::sendEvent(const std::string& url, const std::string& json)
+bool Curl::sendEvent(const std::string& url, const std::string& json)
 {
     bool success = false;
 
@@ -49,12 +49,12 @@ bool LibCurl::sendEvent(const std::string& url, const std::string& json)
     return success;
 }
 
-LibCurl::LibCurl()
+Curl::Curl()
 {
     curl_global_init(CURL_GLOBAL_DEFAULT);
 }
 
-LibCurl::~LibCurl()
+Curl::~Curl()
 {
     curl_global_cleanup();
 }
