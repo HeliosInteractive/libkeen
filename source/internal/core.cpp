@@ -50,23 +50,7 @@ Core::Core()
     , mCacheRef(std::make_shared<Cache>())
 {
     Logger::pull(mLoggerRefs);
-
-    // hardware_concurrency can return zero, in that case one thread is forced
-    unsigned num_threads = std::thread::hardware_concurrency();
-
-    if (num_threads == 0)
-    {
-        LOG_WARN("hardware_concurrency returned 0. Forcing one thread.");
-        num_threads = 1;
-    }
-
-    for (unsigned t = 0; t < num_threads; ++t)
-    {
-        mThreadPool.push_back(std::thread([this]{ mIoService.run(); }));
-        LOG_INFO("Spawned thread " << mThreadPool.back().get_id());
-    }
-
-    LOG_INFO("Thread pool size: " << mThreadPool.size());
+    flush();
 }
 
 Core::~Core()
@@ -79,7 +63,7 @@ Core::~Core()
         for (std::thread& thread : mThreadPool)
         {
             LOG_INFO("Shutting down thread " << thread.get_id());
-            thread.join();
+            if (thread.joinable()) thread.join();
         }
     }
     catch (const std::exception& ex)
@@ -154,6 +138,40 @@ void Core::postCache(unsigned count)
     } catch (...) {
         LOG_ERROR("Core postCache threw an exception.");
     }
+}
+
+void Core::flush()
+{
+    LOG_INFO("Stopping IO service");
+    mIoService.stop();
+
+    for (std::thread& thread : mThreadPool)
+    {
+        LOG_INFO("Shutting down thread " << thread.get_id());
+        if (thread.joinable()) thread.join();
+    }
+
+    if (!mThreadPool.empty()) mThreadPool.clear();
+
+    LOG_INFO("Resetting IO service");
+    mIoService.reset();
+
+    // hardware_concurrency can return zero, in that case one thread is forced
+    unsigned num_threads = std::thread::hardware_concurrency();
+
+    if (num_threads == 0)
+    {
+        LOG_WARN("hardware_concurrency returned 0. Forcing one thread.");
+        num_threads = 1;
+    }
+
+    for (unsigned t = 0; t < num_threads; ++t)
+    {
+        mThreadPool.push_back(std::thread([this] { mIoService.run(); }));
+        LOG_INFO("Spawned thread " << mThreadPool.back().get_id());
+    }
+
+    LOG_INFO("Thread pool size: " << mThreadPool.size());
 }
 
 unsigned Core::useCount()

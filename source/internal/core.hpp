@@ -12,6 +12,7 @@ public:
     ~Core();
     void                        postEvent(Client& client, const std::string& name, const std::string& data);
     void                        postCache(unsigned count);
+    void                        flush();
     static unsigned             useCount();
     static CoreRef              instance();
     static void                 release();
