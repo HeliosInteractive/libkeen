@@ -35,3 +35,7 @@
 !/deps/curl/lib/*/*.lib
 !/deps/curl/bin/*/*.dll
 !/deps/openssl/bin/*/*.dll
+
+# Test case artifacts
+/tests/libkeen.db
+/tests/libkeen.log
