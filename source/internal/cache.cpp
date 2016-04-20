@@ -204,4 +204,27 @@ void Cache::clear()
     }
 }
 
+int Cache::count()
+{
+    if (!connected()) return 0;
+
+    sqlite3_stmt *stmt = nullptr;
+    internal::Scoped<sqlite3_stmt> scope_bound_stmt(stmt);
+
+    std::stringstream ss;
+    ss << "SELECT * FROM cache";
+
+    if (sqlite3_prepare_v2(mConnection, ss.str().c_str(), -1, &stmt, nullptr) != SQLITE_OK)
+    {
+        LOG_ERROR("Unable to prepare the statement.");
+        return 0;
+    }
+
+    int count = 0;
+    while (sqlite3_step(stmt) == SQLITE_ROW)
+        count++;
+
+    return count;
+}
+
 }}
