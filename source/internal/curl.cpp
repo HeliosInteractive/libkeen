@@ -1,6 +1,5 @@
-#include <atomic>
+#include "internal/curl.hpp"
 
-#include "curl.hpp"
 #include "scoped.hpp"
 #include "logger.hpp"
 

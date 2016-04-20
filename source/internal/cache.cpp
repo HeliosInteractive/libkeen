@@ -1,9 +1,11 @@
-#include "keen/cache.hpp"
+#include "internal/cache.hpp"
+
 #include "logger.hpp"
 #include "scoped.hpp"
 #include "sqlite3.h"
 
 namespace libkeen {
+namespace internal {
 
 Cache::Cache()
     : mConnection(nullptr)
@@ -202,4 +204,4 @@ void Cache::clear()
     }
 }
 
-}
+}}

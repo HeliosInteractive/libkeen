@@ -1,11 +1,6 @@
 #pragma once
 
-#include "keen/fwd.hpp"
-
-#include <sstream>
-#include <vector>
-#include <string>
-#include <mutex>
+#include "keen.hpp"
 
 #ifndef LIBKEEN_LOG_TO_CONSOLE
 #   define LIBKEEN_LOG_TO_CONSOLE 1

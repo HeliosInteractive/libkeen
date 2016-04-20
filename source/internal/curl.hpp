@@ -1,10 +1,6 @@
 #pragma once
 
-#include "keen/fwd.hpp"
-
-#include <memory>
-#include <string>
-#include <vector>
+#include "keen.hpp"
 
 namespace libkeen {
 namespace internal {

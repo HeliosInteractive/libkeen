@@ -2,7 +2,8 @@
 #include "logger.hpp"
 #include "keen/client.hpp"
 
-#include <mutex>
+#include "internal/curl.hpp"
+#include "internal/cache.hpp"
 
 namespace libkeen {
 namespace internal {
@@ -45,6 +46,8 @@ void Core::release()
 
 Core::Core()
     : mWork(mIoService)
+    , mCurlRef(std::make_shared<Curl>())
+    , mCacheRef(std::make_shared<Cache>())
 {
     Logger::pull(mLoggerRefs);
 
@@ -99,19 +102,19 @@ void Core::postEvent(Client& client, const std::string& name, const std::string&
     {
         std::stringstream ss;
         ss << "https://api.keen.io/3.0/projects/"
-            << client.getConfig().getProjectId()
+            << client.getProjectId()
             << "/events/"
             << name
             << "?api_key="
-            << client.getConfig().getWriteKey();
+            << client.getWriteKey();
         std::string url{ ss.str() };
 
         LOG_DEBUG("Attempting to post and event to: " << url << " with data: " << data);
 
         mIoService.post([this, url, data]
         {
-            if (!mLibCurl.sendEvent(url, data))
-                mSqlite3.push(url, data);
+            if (!mCurlRef->sendEvent(url, data))
+                mCacheRef->push(url, data);
         });
     }
     catch (const std::exception& ex) {
@@ -130,7 +133,7 @@ void Core::postCache(unsigned count)
         mIoService.post([this, count]
         {
             std::vector<std::pair<std::string, std::string>> caches;
-            mSqlite3.pop(caches, count);
+            mCacheRef->pop(caches, count);
 
             LOG_DEBUG("Cache entries trying to send out: " << caches.size());
 
@@ -140,8 +143,8 @@ void Core::postCache(unsigned count)
 
                 mIoService.post([this, entry]
                 {
-                    if (mLibCurl.sendEvent(entry.first, entry.second))
-                        mSqlite3.remove(entry.first, entry.second);
+                    if (mCurlRef->sendEvent(entry.first, entry.second))
+                        mCacheRef->remove(entry.first, entry.second);
                 });
             }
         });

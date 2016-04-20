@@ -1,15 +1,7 @@
 #pragma once
 
-#include "keen/cache.hpp"
-#include "keen/fwd.hpp"
-#include "curl.hpp"
-
+#include "keen.hpp"
 #include "asio.hpp"
-
-#include <atomic>
-#include <vector>
-#include <thread>
-#include <string>
 
 namespace libkeen {
 namespace internal {
@@ -36,8 +28,8 @@ private:
     asio::io_service::work      mWork;
     std::vector<std::thread>    mThreadPool;
     std::vector<LoggerRef>      mLoggerRefs;
-    Curl                        mLibCurl;
-    Cache                       mSqlite3;
+    CurlRef                     mCurlRef;
+    CacheRef                    mCacheRef;
 };
 
 }}

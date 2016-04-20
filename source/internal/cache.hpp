@@ -1,12 +1,9 @@
 #pragma once
 
-#include "keen/fwd.hpp"
-
-#include <memory>
-#include <vector>
-#include <string>
+#include "keen.hpp"
 
 namespace libkeen {
+namespace internal {
 
 class Cache
 {
@@ -25,4 +22,4 @@ private:
     std::vector<LoggerRef>  mLoggerRefs;
 };
 
-}
+}}

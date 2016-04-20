@@ -1,9 +1,9 @@
 #include "common.hpp"
-#include "core.hpp"
+
+#include "internal/core.hpp"
 
 TEST_CASE("Singleton Check", "[singleton]")
 {
-    using namespace libkeen;
     using namespace libkeen::internal;
 
     // first time access, must have a use count of 0

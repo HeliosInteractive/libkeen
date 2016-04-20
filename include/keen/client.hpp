@@ -1,7 +1,6 @@
 #pragma once
 
-#include "keen/fwd.hpp"
-#include "keen/config.hpp"
+#include "keen.hpp"
 
 namespace libkeen
 {
@@ -10,13 +9,17 @@ class Client
 {
 public:
     Client();
-    const Config&   getConfig() const;
-    void            setConfig(const Config& config);
-    void            sendEvent(const std::string& name, const std::string& data);
+    void                sendEvent(const std::string& name, const std::string& data);
+    void                setProjectId(const std::string& id);
+    void                setWriteKey(const std::string& key);
+    std::string         getProjectId() const;
+    std::string         getWriteKey() const;
 
 private:
-    Config          mConfig;
-    CoreRef         mCoreRef;
+    CoreRef             mCoreRef;
+    mutable std::mutex  mClientLock;
+    std::string         mProjectId;
+    std::string         mWriteKey;
 };
 
 }
