@@ -1,15 +1,20 @@
 var http = require('http');
+var sc = false;
 var count = 0;
 
 http.createServer(function(request, response)
 {
-  console.log(request.url);
-  if (request.url == '/pass') {
+  //console.log(request.url);
+  if (sc || request.url == '/pass') {
 	response.writeHead(200, {"Content-Type": "text/plain"});
 	response.end("OK");
 	count++;
 	console.log(count);
-  } else if (request.url == '/count') {
+  } else if (request.url == '/short_circuit') {
+	response.writeHead(200, {"Content-Type": "text/plain"});
+	response.end("OK");
+	sc = true;
+  }  else if (request.url == '/count') {
 	response.writeHead(200, {"Content-Type": "text/plain"});
 	response.end("" + count);
   } else if (request.url == '/clear') {

@@ -17,7 +17,7 @@ class CoreUnderTest : public libkeen::internal::Core
 public:
     CoreUnderTest() {}
 
-    enum class Condition { Pass, Fail, Clear, Count, Shutdown };
+    enum class Condition { Pass, Fail, Clear, Count, Shutdown, ShortCircuit };
 
     virtual std::string buildAddress(const std::string& /*id*/, const std::string& /*key*/, const std::string& /*name*/) override
     {
@@ -31,12 +31,14 @@ public:
         std::string url_clear       = "http://localhost:8080/clear";
         std::string url_count       = "http://localhost:8080/count";
         std::string url_shutdown    = "http://localhost:8080/shutdown";
+        std::string url_sc          = "http://localhost:8080/short_circuit";
 
         if (mCond == Condition::Pass) return url_pass;
         else if (mCond == Condition::Fail) return url_fail;
         else if (mCond == Condition::Clear) return url_clear;
         else if (mCond == Condition::Count) return url_count;
         else if (mCond == Condition::Shutdown) return url_shutdown;
+        else if (mCond == Condition::ShortCircuit) return url_sc;
         else return url_fail;
     }
 
@@ -74,6 +76,35 @@ TEST_CASE("Network Check", "[network]")
     core.postEvent(client, name, data);
     core.flush();
     REQUIRE(cache.exists(core.buildAddress(), data));
+
+    // Clear server
+    core.setCond(CoreUnderTest::Condition::Clear);
+    curl.sendEvent(core.buildAddress(), "");
+
+    // Test count of events sent
+    core.setCond(CoreUnderTest::Condition::Pass);
+    auto count = 50;
+    for (auto index = 0; index < count; ++index)
+        core.postEvent(client, name, data);
+    core.flush();
+    core.setCond(CoreUnderTest::Condition::Count);
+    std::string reply;
+    REQUIRE(curl.sendEvent(core.buildAddress(), "", reply));
+    REQUIRE(reply == std::to_string(count));
+
+    // Clear server
+    core.setCond(CoreUnderTest::Condition::Clear);
+    curl.sendEvent(core.buildAddress(), "");
+
+    // Test sending cached events
+    cache.clear();
+    core.setCond(CoreUnderTest::Condition::Fail);
+    for (auto index = 0; index < count; ++index)
+        core.postEvent(client, name, data + std::to_string(index));
+    core.setCond(CoreUnderTest::Condition::ShortCircuit);
+    curl.sendEvent(core.buildAddress(), "");
+    core.flush();
+    REQUIRE(cache.count() == count);
 
     // Shutdown server
     core.setCond(CoreUnderTest::Condition::Shutdown);
