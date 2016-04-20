@@ -44,6 +44,18 @@ void Core::release()
     instance(AccessType::Release);
 }
 
+std::string Core::buildAddress(const std::string& id, const std::string& key, const std::string& name)
+{
+    std::stringstream ss;
+    ss << "https://api.keen.io/3.0/projects/"
+        << id
+        << "/events/"
+        << name
+        << "?api_key="
+        << key;
+    return ss.str();
+}
+
 Core::Core()
     : mWork(mIoService)
     , mCurlRef(std::make_shared<Curl>())
@@ -84,15 +96,7 @@ void Core::postEvent(Client& client, const std::string& name, const std::string&
 {
     try
     {
-        std::stringstream ss;
-        ss << "https://api.keen.io/3.0/projects/"
-            << client.getProjectId()
-            << "/events/"
-            << name
-            << "?api_key="
-            << client.getWriteKey();
-        std::string url{ ss.str() };
-
+        std::string url{ buildAddress(client.getProjectId(), client.getWriteKey(), name) };
         LOG_DEBUG("Attempting to post and event to: " << url << " with data: " << data);
 
         mIoService.post([this, url, data]
