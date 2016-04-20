@@ -17,6 +17,8 @@ public:
     Curl();
     //! send a application/json request to given url using cURL
     bool    sendEvent(const std::string& url, const std::string& json);
+    //! send a application/json request to given url using cURL and returns the result body
+    bool    sendEvent(const std::string& url, const std::string& json, std::string& reply);
 
 private:
     std::shared_ptr< class LibCurlHandle >
