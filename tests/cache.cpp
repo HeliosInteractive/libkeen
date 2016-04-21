@@ -1,12 +1,10 @@
 #include "common.hpp"
-#include "keen.hpp"
 
-#include <vector>
-#include <string>
+#include "internal/cache.hpp"
 
 TEST_CASE("Cache Check", "[cache]")
 {
-    using namespace libkeen;
+    using namespace libkeen::internal;
 
     Cache cache_ref;
     

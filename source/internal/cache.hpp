@@ -1,12 +1,9 @@
 #pragma once
 
-#include "keen/fwd.hpp"
-
-#include <memory>
-#include <vector>
-#include <string>
+#include "keen.hpp"
 
 namespace libkeen {
+namespace internal {
 
 class Cache
 {
@@ -19,10 +16,11 @@ public:
     void                    remove(const std::string& url, const std::string& data);
     bool                    connected() const;
     void                    clear();
+    int                     count();
 
 private:
     sqlite3*                mConnection;
     std::vector<LoggerRef>  mLoggerRefs;
 };
 
-}
+}}

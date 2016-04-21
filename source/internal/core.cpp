@@ -2,7 +2,8 @@
 #include "logger.hpp"
 #include "keen/client.hpp"
 
-#include <mutex>
+#include "internal/curl.hpp"
+#include "internal/cache.hpp"
 
 namespace libkeen {
 namespace internal {
@@ -43,27 +44,25 @@ void Core::release()
     instance(AccessType::Release);
 }
 
+std::string Core::buildAddress(const std::string& id, const std::string& key, const std::string& name)
+{
+    std::stringstream ss;
+    ss << "https://api.keen.io/3.0/projects/"
+        << id
+        << "/events/"
+        << name
+        << "?api_key="
+        << key;
+    return ss.str();
+}
+
 Core::Core()
     : mWork(mIoService)
+    , mCurlRef(std::make_shared<Curl>())
+    , mCacheRef(std::make_shared<Cache>())
 {
     Logger::pull(mLoggerRefs);
-
-    // hardware_concurrency can return zero, in that case one thread is forced
-    unsigned num_threads = std::thread::hardware_concurrency();
-
-    if (num_threads == 0)
-    {
-        LOG_WARN("hardware_concurrency returned 0. Forcing one thread.");
-        num_threads = 1;
-    }
-
-    for (unsigned t = 0; t < num_threads; ++t)
-    {
-        mThreadPool.push_back(std::thread([this]{ mIoService.run(); }));
-        LOG_INFO("Spawned thread " << mThreadPool.back().get_id());
-    }
-
-    LOG_INFO("Thread pool size: " << mThreadPool.size());
+    flush();
 }
 
 Core::~Core()
@@ -76,7 +75,7 @@ Core::~Core()
         for (std::thread& thread : mThreadPool)
         {
             LOG_INFO("Shutting down thread " << thread.get_id());
-            thread.join();
+            if (thread.joinable()) thread.join();
         }
     }
     catch (const std::exception& ex)
@@ -97,21 +96,25 @@ void Core::postEvent(Client& client, const std::string& name, const std::string&
 {
     try
     {
-        std::stringstream ss;
-        ss << "https://api.keen.io/3.0/projects/"
-            << client.getConfig().getProjectId()
-            << "/events/"
-            << name
-            << "?api_key="
-            << client.getConfig().getWriteKey();
-        std::string url{ ss.str() };
-
+        std::string url{ buildAddress(client.getProjectId(), client.getWriteKey(), name) };
         LOG_DEBUG("Attempting to post and event to: " << url << " with data: " << data);
 
-        mIoService.post([this, url, data]
+        TaskRef task{ std::make_shared<Task>([this, url, data]
         {
-            if (!mLibCurl.sendEvent(url, data))
-                mSqlite3.push(url, data);
+            if (!mCurlRef->sendEvent(url, data))
+                mCacheRef->push(url, data);
+        }) };
+
+        {
+            std::lock_guard<std::mutex> lock(mTaskLock);
+            mTaskVec.push_back(task);
+        }
+
+        mIoService.post([this, task] {
+            (*task)();
+            
+            std::lock_guard<std::mutex> lock(mTaskLock);
+            mTaskVec.erase(std::find(mTaskVec.cbegin(), mTaskVec.cend(), task));
         });
     }
     catch (const std::exception& ex) {
@@ -130,7 +133,7 @@ void Core::postCache(unsigned count)
         mIoService.post([this, count]
         {
             std::vector<std::pair<std::string, std::string>> caches;
-            mSqlite3.pop(caches, count);
+            mCacheRef->pop(caches, count);
 
             LOG_DEBUG("Cache entries trying to send out: " << caches.size());
 
@@ -140,8 +143,8 @@ void Core::postCache(unsigned count)
 
                 mIoService.post([this, entry]
                 {
-                    if (mLibCurl.sendEvent(entry.first, entry.second))
-                        mSqlite3.remove(entry.first, entry.second);
+                    if (mCurlRef->sendEvent(entry.first, entry.second))
+                        mCacheRef->remove(entry.first, entry.second);
                 });
             }
         });
@@ -151,6 +154,52 @@ void Core::postCache(unsigned count)
     } catch (...) {
         LOG_ERROR("Core postCache threw an exception.");
     }
+}
+
+void Core::flush()
+{
+    LOG_INFO("Stopping IO service");
+    mIoService.stop();
+
+    for (std::thread& thread : mThreadPool)
+    {
+        LOG_INFO("Shutting down thread " << thread.get_id());
+        if (thread.joinable()) thread.join();
+    }
+
+    if (!mThreadPool.empty()) mThreadPool.clear();
+
+    LOG_INFO("Executing pending tasks");
+    {
+        for (auto& task : mTaskVec)
+            (*task)();
+    }
+    /*for (auto& task_set : mTaskMap)
+    {
+        try { (*task_set.first)(); }
+        catch (const std::exception& ex) { LOG_ERROR(ex.what()); }
+    }*/
+    mTaskVec.clear();
+
+    LOG_INFO("Resetting IO service");
+    mIoService.reset();
+
+    // hardware_concurrency can return zero, in that case one thread is forced
+    unsigned num_threads = std::thread::hardware_concurrency();
+
+    if (num_threads == 0)
+    {
+        LOG_WARN("hardware_concurrency returned 0. Forcing one thread.");
+        num_threads = 1;
+    }
+
+    for (unsigned t = 0; t < num_threads; ++t)
+    {
+        mThreadPool.push_back(std::thread([this] { mIoService.run(); }));
+        LOG_INFO("Spawned thread " << mThreadPool.back().get_id());
+    }
+
+    LOG_INFO("Thread pool size: " << mThreadPool.size());
 }
 
 unsigned Core::useCount()

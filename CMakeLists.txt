@@ -35,7 +35,7 @@ INCLUDE( FindLibCURL REQUIRED )
 INCLUDE_DIRECTORIES(
   "${LIBKEEN_DEPS}/asio/asio/include"
   "${LIBKEEN_DEPS}/sqlite"
-  "${LIBKEEN_SOURCE}/internal"
+  "${LIBKEEN_SOURCE}"
   "${LIBKEEN_INCLUDE}"
   "${LibCURL_INCLUDE_DIR}"
 )
@@ -46,10 +46,7 @@ CONFIGURE_FILE(
 
 SET( LIBKEEN_HEADERS
   "${LIBKEEN_INCLUDE}/keen/version.hpp"
-  "${LIBKEEN_INCLUDE}/keen/config.hpp"
   "${LIBKEEN_INCLUDE}/keen/client.hpp"
-  "${LIBKEEN_INCLUDE}/keen/cache.hpp"
-  "${LIBKEEN_INCLUDE}/keen/fwd.hpp"
   "${LIBKEEN_INCLUDE}/keen.hpp" )
 
 SET( LIBKEEN_SOURCES
@@ -62,11 +59,10 @@ SET( LIBKEEN_SOURCES
   "${LIBKEEN_SOURCE}/internal/curl.cpp"
   "${LIBKEEN_SOURCE}/internal/core.hpp"
   "${LIBKEEN_SOURCE}/internal/core.cpp"
+  "${LIBKEEN_SOURCE}/internal/cache.hpp"
+  "${LIBKEEN_SOURCE}/internal/cache.cpp"
   "${LIBKEEN_SOURCE}/keen/version.cpp"
-  "${LIBKEEN_SOURCE}/keen/config.cpp"
-  "${LIBKEEN_SOURCE}/keen/client.cpp"
-  "${LIBKEEN_SOURCE}/keen/cache.cpp"
-  "${LIBKEEN_SOURCE}/keen.cpp" )
+  "${LIBKEEN_SOURCE}/keen/client.cpp" )
 
 ADD_LIBRARY(
   libkeen.static STATIC

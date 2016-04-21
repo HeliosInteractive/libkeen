@@ -1,5 +1,6 @@
 #include "common.hpp"
-#include "keen.hpp"
+
+#include "keen/version.hpp"
 
 TEST_CASE("Sanity Check", "[sanity]")
 {
