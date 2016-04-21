@@ -1,5 +1,7 @@
 #include "keen/client.hpp"
+
 #include "internal/core.hpp"
+#include "internal/logger.hpp"
 
 namespace libkeen
 {
@@ -9,17 +11,32 @@ Client::Client()
     , mProjectId("invalid")
     , mWriteKey("invalid")
 {
-    /* no-op */
+    LOG_DEBUG("Cliant instance is initialized.");
 }
 
-void Client::sendEvent(const std::string& name, const std::string& data)
+Client::~Client()
 {
-    onSendEvent(name, data);
+    LOG_DEBUG("Cliant instance is destructed.");
+}
+
+void Client::sendEvent(const std::string& collection, const std::string& json)
+{
+    if (!mCoreRef)
+    {
+        LOG_ERROR("Client does not have a valid Core handle.");
+        return;
+    }
+
+    mCoreRef->postEvent(getEndpoint(collection), json);
 }
 
 void Client::setProjectId(const std::string& id)
 {
-    if (id.empty()) return;
+    if (id.empty())
+    {
+        LOG_WARN("Empty project ID is supplied.");
+        return;
+    }
 
     std::lock_guard<decltype(mClientLock)> lock(mClientLock);
     mProjectId = id;
@@ -27,7 +44,11 @@ void Client::setProjectId(const std::string& id)
 
 void Client::setWriteKey(const std::string& key)
 {
-    if (key.empty()) return;
+    if (key.empty())
+    {
+        LOG_WARN("Empty write key is supplied.");
+        return;
+    }
 
     std::lock_guard<decltype(mClientLock)> lock(mClientLock);
     mWriteKey = key;
@@ -45,19 +66,18 @@ std::string Client::getWriteKey() const
     return mWriteKey;
 }
 
-void Client::onSendEvent(const std::string& name, const std::string& data)
+std::string Client::getEndpoint(const std::string& collection) const
 {
     std::lock_guard<decltype(mClientLock)> lock(mClientLock);
-    
+
     std::stringstream ss;
     ss << "https://api.keen.io/3.0/projects/"
         << mProjectId
         << "/events/"
-        << name
+        << collection
         << "?api_key="
         << mWriteKey;
-
-    mCoreRef->postEvent(ss.str(), data);
+    return ss.str();
 }
 
 }
