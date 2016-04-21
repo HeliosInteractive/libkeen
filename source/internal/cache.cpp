@@ -69,6 +69,8 @@ Cache::~Cache()
 
 void Cache::push(const std::string& url, const std::string& data)
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     LOG_INFO("Pushing cache entry with url: " << url << " and data: " << data);
 
     if (!connected())
@@ -98,8 +100,10 @@ void Cache::push(const std::string& url, const std::string& data)
     LOG_INFO("Cache entry with url: " << url << " and data: " << data << " pushed.");
 }
 
-bool Cache::exists(const std::string& url, const std::string& data) const
+bool Cache::exists(const std::string& url, const std::string& data)
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     if (!connected()) return false;
 
     sqlite3_stmt *stmt = nullptr;
@@ -120,8 +124,10 @@ bool Cache::exists(const std::string& url, const std::string& data) const
         return false;
 }
 
-void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count) const
+void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count)
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     if (!connected()) return;
     if (!records.empty()) records.clear();
 
@@ -147,6 +153,8 @@ void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsig
 
 void Cache::remove(const std::string& url, const std::string& data)
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     LOG_INFO("Removing cache entry with url: " << url << " and data: " << data);
 
     if (!connected())
@@ -183,6 +191,8 @@ bool Cache::connected() const
 
 void Cache::clear()
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     if (!connected()) return;
 
     sqlite3_stmt *stmt = nullptr;
@@ -206,6 +216,8 @@ void Cache::clear()
 
 int Cache::count()
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     if (!connected()) return 0;
 
     sqlite3_stmt *stmt = nullptr;
