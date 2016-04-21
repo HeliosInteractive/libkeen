@@ -16,10 +16,11 @@ public:
     void                    remove(const std::string& url, const std::string& data);
     bool                    connected() const;
     void                    clear();
-    int                     count();
+    int                     count() const;
 
 private:
     sqlite3*                mConnection;
+    mutable std::mutex      mCommandLock;
     std::vector<LoggerRef>  mLoggerRefs;
 };
 

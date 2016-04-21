@@ -15,7 +15,7 @@ Cache::Cache()
 
     if (sqlite3_threadsafe() != SQLITE_CONFIG_SERIALIZED)
     {
-        LOG_WARN("Sqlite3 engine is not configured as serilized! This causes race conditions");
+        LOG_WARN("Sqlite3 engine is not configured as serilized! This causes race conditions.");
         mConnection = nullptr;
         return;
     }
@@ -69,6 +69,8 @@ Cache::~Cache()
 
 void Cache::push(const std::string& url, const std::string& data)
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     LOG_INFO("Pushing cache entry with url: " << url << " and data: " << data);
 
     if (!connected())
@@ -100,6 +102,8 @@ void Cache::push(const std::string& url, const std::string& data)
 
 bool Cache::exists(const std::string& url, const std::string& data) const
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     if (!connected()) return false;
 
     sqlite3_stmt *stmt = nullptr;
@@ -122,6 +126,8 @@ bool Cache::exists(const std::string& url, const std::string& data) const
 
 void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count) const
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     if (!connected()) return;
     if (!records.empty()) records.clear();
 
@@ -147,6 +153,8 @@ void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsig
 
 void Cache::remove(const std::string& url, const std::string& data)
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     LOG_INFO("Removing cache entry with url: " << url << " and data: " << data);
 
     if (!connected())
@@ -183,6 +191,8 @@ bool Cache::connected() const
 
 void Cache::clear()
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     if (!connected()) return;
 
     sqlite3_stmt *stmt = nullptr;
@@ -204,8 +214,10 @@ void Cache::clear()
     }
 }
 
-int Cache::count()
+int Cache::count() const
 {
+    std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
+
     if (!connected()) return 0;
 
     sqlite3_stmt *stmt = nullptr;

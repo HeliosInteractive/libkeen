@@ -4,12 +4,12 @@ var count = 0;
 
 http.createServer(function(request, response)
 {
-  //console.log(request.url);
-  if (sc || request.url == '/pass') {
+  if (request.url == '/shutdown') {
+	process.exit(0);
+  } else if (sc || request.url == '/pass') {
 	response.writeHead(200, {"Content-Type": "text/plain"});
 	response.end("OK");
 	count++;
-	console.log(count);
   } else if (request.url == '/short_circuit') {
 	response.writeHead(200, {"Content-Type": "text/plain"});
 	response.end("OK");
@@ -24,8 +24,6 @@ http.createServer(function(request, response)
   } else if (request.url == '/fail') {
 	response.writeHead(400);
 	response.end("FAIL");
-  } else if (request.url == '/shutdown') {
-	process.exit(0);
   } else {
 	response.writeHead(403);
 	response.end("NOPE");
