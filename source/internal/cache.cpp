@@ -15,7 +15,7 @@ Cache::Cache()
 
     if (sqlite3_threadsafe() != SQLITE_CONFIG_SERIALIZED)
     {
-        LOG_WARN("Sqlite3 engine is not configured as serilized! This causes race conditions");
+        LOG_WARN("Sqlite3 engine is not configured as serilized! This causes race conditions.");
         mConnection = nullptr;
         return;
     }
@@ -100,7 +100,7 @@ void Cache::push(const std::string& url, const std::string& data)
     LOG_INFO("Cache entry with url: " << url << " and data: " << data << " pushed.");
 }
 
-bool Cache::exists(const std::string& url, const std::string& data)
+bool Cache::exists(const std::string& url, const std::string& data) const
 {
     std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
 
@@ -124,7 +124,7 @@ bool Cache::exists(const std::string& url, const std::string& data)
         return false;
 }
 
-void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count)
+void Cache::pop(std::vector<std::pair<std::string, std::string>>& records, unsigned count) const
 {
     std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
 
@@ -214,7 +214,7 @@ void Cache::clear()
     }
 }
 
-int Cache::count()
+int Cache::count() const
 {
     std::lock_guard<decltype(mCommandLock)> lock(mCommandLock);
 
