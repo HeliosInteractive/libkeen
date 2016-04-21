@@ -7,7 +7,7 @@
 #include "internal/cache.hpp"
 #include "internal/logger.hpp"
 
-TEST_CASE("Network Check", "[network]")
+TEST_CASE("Core Check", "[core]")
 {
     using namespace libkeen;
     using namespace libkeen::internal;
@@ -51,4 +51,10 @@ TEST_CASE("Network Check", "[network]")
         core->postEvent(server.address(TestServer::Condition::Fail), data + std::to_string(index));
     core->flush();
     REQUIRE(cache.count() == count);
+
+    // Test sending cached events
+    REQUIRE(curl.sendEvent(server.address(TestServer::Condition::ShortCircuit), ""));
+    core->postCache(count);
+    core->flush();
+    REQUIRE(cache.count() == 0);
 }
