@@ -103,9 +103,9 @@ void Core::postCache(unsigned count)
 
             LOG_DEBUG("Cache entries trying to send out: " << caches.size());
 
-            for (auto entry : caches)
+            for (auto& entry : caches)
             {
-                LOG_DEBUG("Attempting to post and event to: " << entry.first << " with data: " << entry.second);
+                LOG_DEBUG("Attempting to post cached event to: " << entry.first << " with json: " << entry.second);
 
                 mIoService.post([this, entry]
                 {
@@ -126,32 +126,32 @@ void Core::flush()
 {
     if (!mIoService.stopped())
     {
-        LOG_INFO("Clearing work");
+        LOG_INFO("Clearing work.");
         mServiceWork.reset();
 
-        LOG_INFO("Waiting for pending");
+        LOG_INFO("Waiting for pending.");
         mIoService.run();
 
-        LOG_INFO("Stopping IO service");
+        LOG_INFO("Stopping IO service.");
         mIoService.stop();
     }
 
     if (!mThreadPool.empty())
     {
-        for (std::thread& thread : mThreadPool)
+        for (auto& thread : mThreadPool)
         {
             LOG_INFO("Shutting down thread " << thread.get_id());
             if (thread.joinable()) thread.join();
         }
 
-        LOG_INFO("Thread pool is empty.");
         mThreadPool.clear();
+        LOG_INFO("Thread pool is empty.");
     }
 
-    LOG_INFO("Resetting IO service");
+    LOG_INFO("Resetting IO service.");
     mIoService.reset();
 
-    LOG_INFO("Allocating new work");
+    LOG_INFO("Allocating new work.");
     mServiceWork.reset(new asio::io_service::work(mIoService));
 
     // hardware_concurrency can return zero, in that case one thread is forced

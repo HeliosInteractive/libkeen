@@ -3,10 +3,6 @@
 #include "keen.hpp"
 #include "asio.hpp"
 
-#include <functional>
-#include <unordered_map>
-#include <future>
-
 namespace libkeen {
 namespace internal {
 
