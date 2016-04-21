@@ -23,8 +23,6 @@ public:
 
 private:
     enum class AccessType       { Current, Renew, Release };
-    using Task                  = std::function<void()>;
-    using TaskRef               = std::shared_ptr<Task>;
 
 private:
     explicit                    Core();
@@ -32,11 +30,10 @@ private:
 
 private:
     asio::io_service            mIoService;
-    asio::io_service::work      mServiceWork;
+    std::shared_ptr<asio::io_service::work>
+                                mServiceWork;
     std::vector<std::thread>    mThreadPool;
     std::vector<LoggerRef>      mLoggerRefs;
-    std::vector<TaskRef>        mPendingTasks;
-    std::mutex                  mPendingLock;
     CurlRef                     mCurlRef;
     CacheRef                    mCacheRef;
 };

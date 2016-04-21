@@ -45,7 +45,7 @@ void Core::release()
 }
 
 Core::Core()
-    : mServiceWork(mIoService)
+    : mServiceWork(new asio::io_service::work(mIoService))
     , mCurlRef(std::make_shared<Curl>())
     , mCacheRef(std::make_shared<Cache>())
 {
@@ -82,41 +82,12 @@ Core::~Core()
 
 void Core::postEvent(const std::string& url, const std::string& json)
 {
-    try
+    LOG_DEBUG("Attempting to post and event to: " << url << " with json: " << json);
+    mIoService.post([=]
     {
-        LOG_DEBUG("Attempting to post and event to: " << url << " with json: " << json);
-
-        TaskRef task{ std::make_shared<Task>([this, url, json]
-        {
-            if (!mCurlRef->sendEvent(url, json))
-                mCacheRef->push(url, json);
-        }) };
-
-        {
-            std::lock_guard<std::mutex> lock(mPendingLock);
-            mPendingTasks.push_back(task);
-        }
-
-        mIoService.post([this, task]
-        {
-            if (task)
-            {
-                (*task)();
-            }
-            else
-            {
-                LOG_ERROR("Posted task is invalid");
-            }
-            
-            std::lock_guard<std::mutex> lock(mPendingLock);
-            mPendingTasks.erase(std::find(mPendingTasks.cbegin(), mPendingTasks.cend(), task));
-        });
-    }
-    catch (const std::exception& ex) {
-        LOG_ERROR("Core postEvent threw an exception: " << ex.what());
-    } catch (...) {
-        LOG_ERROR("Core postEvent threw an exception.");
-    }
+        if (!mCurlRef->sendEvent(url, json))
+            mCacheRef->push(url, json);
+    });
 }
 
 void Core::postCache(unsigned count)
@@ -153,26 +124,35 @@ void Core::postCache(unsigned count)
 
 void Core::flush()
 {
-    LOG_INFO("Stopping IO service");
-    mIoService.stop();
-
-    for (std::thread& thread : mThreadPool)
+    if (!mIoService.stopped())
     {
-        LOG_INFO("Shutting down thread " << thread.get_id());
-        if (thread.joinable()) thread.join();
+        LOG_INFO("Clearing work");
+        mServiceWork.reset();
+
+        LOG_INFO("Waiting for pending");
+        mIoService.run();
+
+        LOG_INFO("Stopping IO service");
+        mIoService.stop();
     }
 
-    if (!mThreadPool.empty()) mThreadPool.clear();
-
-    LOG_INFO("Executing pending tasks");
+    if (!mThreadPool.empty())
     {
-        for (auto& task : mPendingTasks)
-            (*task)();
+        for (std::thread& thread : mThreadPool)
+        {
+            LOG_INFO("Shutting down thread " << thread.get_id());
+            if (thread.joinable()) thread.join();
+        }
+
+        LOG_INFO("Thread pool is empty.");
+        mThreadPool.clear();
     }
-    mPendingTasks.clear();
 
     LOG_INFO("Resetting IO service");
     mIoService.reset();
+
+    LOG_INFO("Allocating new work");
+    mServiceWork.reset(new asio::io_service::work(mIoService));
 
     // hardware_concurrency can return zero, in that case one thread is forced
     unsigned num_threads = std::thread::hardware_concurrency();
