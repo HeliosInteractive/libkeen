@@ -4,12 +4,10 @@ var count = 0;
 
 http.createServer(function(request, response)
 {
-  //console.log(request.url);
   if (sc || request.url == '/pass') {
 	response.writeHead(200, {"Content-Type": "text/plain"});
 	response.end("OK");
 	count++;
-	console.log(count);
   } else if (request.url == '/short_circuit') {
 	response.writeHead(200, {"Content-Type": "text/plain"});
 	response.end("OK");
