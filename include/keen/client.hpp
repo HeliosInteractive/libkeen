@@ -15,8 +15,11 @@ public:
     std::string         getProjectId() const;
     std::string         getWriteKey() const;
 
-private:
+protected:
+    virtual void        onSendEvent(const std::string& name, const std::string& data);
     CoreRef             mCoreRef;
+
+private:
     mutable std::mutex  mClientLock;
     std::string         mProjectId;
     std::string         mWriteKey;

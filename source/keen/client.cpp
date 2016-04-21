@@ -14,8 +14,7 @@ Client::Client()
 
 void Client::sendEvent(const std::string& name, const std::string& data)
 {
-    std::lock_guard<decltype(mClientLock)> lock(mClientLock);
-    mCoreRef->postEvent(*this, name, data);
+    onSendEvent(name, data);
 }
 
 void Client::setProjectId(const std::string& id)
@@ -44,6 +43,21 @@ std::string Client::getWriteKey() const
 {
     std::lock_guard<decltype(mClientLock)> lock(mClientLock);
     return mWriteKey;
+}
+
+void Client::onSendEvent(const std::string& name, const std::string& data)
+{
+    std::lock_guard<decltype(mClientLock)> lock(mClientLock);
+    
+    std::stringstream ss;
+    ss << "https://api.keen.io/3.0/projects/"
+        << mProjectId
+        << "/events/"
+        << name
+        << "?api_key="
+        << mWriteKey;
+
+    mCoreRef->postEvent(ss.str(), data);
 }
 
 }
