@@ -44,20 +44,8 @@ void Core::release()
     instance(AccessType::Release);
 }
 
-std::string Core::buildAddress(const std::string& id, const std::string& key, const std::string& name)
-{
-    std::stringstream ss;
-    ss << "https://api.keen.io/3.0/projects/"
-        << id
-        << "/events/"
-        << name
-        << "?api_key="
-        << key;
-    return ss.str();
-}
-
 Core::Core()
-    : mWork(mIoService)
+    : mServiceWork(mIoService)
     , mCurlRef(std::make_shared<Curl>())
     , mCacheRef(std::make_shared<Cache>())
 {
@@ -92,29 +80,36 @@ Core::~Core()
     LOG_INFO("Core is shutdown.");
 }
 
-void Core::postEvent(Client& client, const std::string& name, const std::string& data)
+void Core::postEvent(const std::string& url, const std::string& json)
 {
     try
     {
-        std::string url{ buildAddress(client.getProjectId(), client.getWriteKey(), name) };
-        LOG_DEBUG("Attempting to post and event to: " << url << " with data: " << data);
+        LOG_DEBUG("Attempting to post and event to: " << url << " with json: " << json);
 
-        TaskRef task{ std::make_shared<Task>([this, url, data]
+        TaskRef task{ std::make_shared<Task>([this, url, json]
         {
-            if (!mCurlRef->sendEvent(url, data))
-                mCacheRef->push(url, data);
+            if (!mCurlRef->sendEvent(url, json))
+                mCacheRef->push(url, json);
         }) };
 
         {
-            std::lock_guard<std::mutex> lock(mTaskLock);
-            mTaskVec.push_back(task);
+            std::lock_guard<std::mutex> lock(mPendingLock);
+            mPendingTasks.push_back(task);
         }
 
-        mIoService.post([this, task] {
-            (*task)();
+        mIoService.post([this, task]
+        {
+            if (task)
+            {
+                (*task)();
+            }
+            else
+            {
+                LOG_ERROR("Posted task is invalid");
+            }
             
-            std::lock_guard<std::mutex> lock(mTaskLock);
-            mTaskVec.erase(std::find(mTaskVec.cbegin(), mTaskVec.cend(), task));
+            std::lock_guard<std::mutex> lock(mPendingLock);
+            mPendingTasks.erase(std::find(mPendingTasks.cbegin(), mPendingTasks.cend(), task));
         });
     }
     catch (const std::exception& ex) {
@@ -171,15 +166,10 @@ void Core::flush()
 
     LOG_INFO("Executing pending tasks");
     {
-        for (auto& task : mTaskVec)
+        for (auto& task : mPendingTasks)
             (*task)();
     }
-    /*for (auto& task_set : mTaskMap)
-    {
-        try { (*task_set.first)(); }
-        catch (const std::exception& ex) { LOG_ERROR(ex.what()); }
-    }*/
-    mTaskVec.clear();
+    mPendingTasks.clear();
 
     LOG_INFO("Resetting IO service");
     mIoService.reset();
