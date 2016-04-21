@@ -101,8 +101,6 @@ TEST_CASE("Network Check", "[network]")
     core.setCond(CoreUnderTest::Condition::Fail);
     for (auto index = 0; index < count; ++index)
         core.postEvent(client, name, data + std::to_string(index));
-    core.setCond(CoreUnderTest::Condition::ShortCircuit);
-    curl.sendEvent(core.buildAddress(), "");
     core.flush();
     REQUIRE(cache.count() == count);
 

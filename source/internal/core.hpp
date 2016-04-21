@@ -3,8 +3,16 @@
 #include "keen.hpp"
 #include "asio.hpp"
 
+#include <functional>
+#include <unordered_map>
+#include <future>
+
 namespace libkeen {
 namespace internal {
+
+using Task      = std::function<void()>;
+using TaskRef   = std::shared_ptr<Task>;
+using TaskVec   = std::vector<TaskRef>;
 
 class Core
 {
@@ -30,6 +38,8 @@ private:
     asio::io_service::work      mWork;
     std::vector<std::thread>    mThreadPool;
     std::vector<LoggerRef>      mLoggerRefs;
+    TaskVec                     mTaskVec;
+    std::mutex                  mTaskLock;
     CurlRef                     mCurlRef;
     CacheRef                    mCacheRef;
 };

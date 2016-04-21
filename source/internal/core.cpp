@@ -99,10 +99,22 @@ void Core::postEvent(Client& client, const std::string& name, const std::string&
         std::string url{ buildAddress(client.getProjectId(), client.getWriteKey(), name) };
         LOG_DEBUG("Attempting to post and event to: " << url << " with data: " << data);
 
-        mIoService.post([this, url, data]
+        TaskRef task{ std::make_shared<Task>([this, url, data]
         {
             if (!mCurlRef->sendEvent(url, data))
                 mCacheRef->push(url, data);
+        }) };
+
+        {
+            std::lock_guard<std::mutex> lock(mTaskLock);
+            mTaskVec.push_back(task);
+        }
+
+        mIoService.post([this, task] {
+            (*task)();
+            
+            std::lock_guard<std::mutex> lock(mTaskLock);
+            mTaskVec.erase(std::find(mTaskVec.cbegin(), mTaskVec.cend(), task));
         });
     }
     catch (const std::exception& ex) {
@@ -156,6 +168,18 @@ void Core::flush()
     }
 
     if (!mThreadPool.empty()) mThreadPool.clear();
+
+    LOG_INFO("Executing pending tasks");
+    {
+        for (auto& task : mTaskVec)
+            (*task)();
+    }
+    /*for (auto& task_set : mTaskMap)
+    {
+        try { (*task_set.first)(); }
+        catch (const std::exception& ex) { LOG_ERROR(ex.what()); }
+    }*/
+    mTaskVec.clear();
 
     LOG_INFO("Resetting IO service");
     mIoService.reset();
