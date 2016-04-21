@@ -50,104 +50,11 @@ Core::Core()
     , mCacheRef(std::make_shared<Cache>())
 {
     Logger::pull(mLoggerRefs);
-    flush();
+    respawn();
 }
 
-Core::~Core()
+void Core::respawn()
 {
-    try
-    {
-        LOG_INFO("Stopping IO service");
-        mIoService.stop();
-
-        for (std::thread& thread : mThreadPool)
-        {
-            LOG_INFO("Shutting down thread " << thread.get_id());
-            if (thread.joinable()) thread.join();
-        }
-    }
-    catch (const std::exception& ex)
-    {
-        LOG_WARN("Unable to shutdown the core: " << ex.what());
-        return;
-    }
-    catch (...)
-    {
-        LOG_WARN("Unable to shutdown the core. Giving up");
-        return;
-    }
-
-    LOG_INFO("Core is shutdown.");
-}
-
-void Core::postEvent(const std::string& url, const std::string& json)
-{
-    LOG_DEBUG("Attempting to post and event to: " << url << " with json: " << json);
-    mIoService.post([=]
-    {
-        if (!mCurlRef->sendEvent(url, json))
-            mCacheRef->push(url, json);
-    });
-}
-
-void Core::postCache(unsigned count)
-{
-    try
-    {
-        LOG_DEBUG("Attempting to post cache with count: " << count);
-
-        mIoService.post([this, count]
-        {
-            std::vector<std::pair<std::string, std::string>> caches;
-            mCacheRef->pop(caches, count);
-
-            LOG_DEBUG("Cache entries trying to send out: " << caches.size());
-
-            for (auto& entry : caches)
-            {
-                LOG_DEBUG("Attempting to post cached event to: " << entry.first << " with json: " << entry.second);
-
-                mIoService.post([this, entry]
-                {
-                    if (mCurlRef->sendEvent(entry.first, entry.second))
-                        mCacheRef->remove(entry.first, entry.second);
-                });
-            }
-        });
-    }
-    catch (const std::exception& ex) {
-        LOG_ERROR("Core postCache threw an exception: " << ex.what());
-    } catch (...) {
-        LOG_ERROR("Core postCache threw an exception.");
-    }
-}
-
-void Core::flush()
-{
-    if (!mIoService.stopped())
-    {
-        LOG_INFO("Clearing work.");
-        mServiceWork.reset();
-
-        LOG_INFO("Waiting for pending.");
-        mIoService.run();
-
-        LOG_INFO("Stopping IO service.");
-        mIoService.stop();
-    }
-
-    if (!mThreadPool.empty())
-    {
-        for (auto& thread : mThreadPool)
-        {
-            LOG_INFO("Shutting down thread " << thread.get_id());
-            if (thread.joinable()) thread.join();
-        }
-
-        mThreadPool.clear();
-        LOG_INFO("Thread pool is empty.");
-    }
-
     LOG_INFO("Resetting IO service.");
     mIoService.reset();
 
@@ -170,6 +77,75 @@ void Core::flush()
     }
 
     LOG_INFO("Thread pool size: " << mThreadPool.size());
+}
+
+void Core::shutdown()
+{
+    if (!mIoService.stopped())
+    {
+        LOG_INFO("Clearing work.");
+        if (mServiceWork) mServiceWork.reset();
+
+        LOG_INFO("Waiting for pending handlers.");
+        mIoService.run();
+
+        LOG_INFO("Stopping IO service.");
+        mIoService.stop();
+    }
+
+    if (!mThreadPool.empty())
+    {
+        for (auto& thread : mThreadPool)
+        {
+            LOG_INFO("Shutting down thread " << thread.get_id());
+            if (thread.joinable()) thread.join();
+        }
+
+        mThreadPool.clear();
+        LOG_INFO("Thread pool is empty.");
+    }
+}
+
+Core::~Core()
+{
+    shutdown();
+    LOG_INFO("Core is shutdown.");
+}
+
+void Core::postEvent(const std::string& url, const std::string& json)
+{
+    LOG_INFO("Attempting to post and event to: " << url << " with json: " << json);
+    mIoService.post([=]
+    {
+        if (!mCurlRef->sendEvent(url, json))
+            mCacheRef->push(url, json);
+    });
+}
+
+void Core::postCache(unsigned count)
+{
+    LOG_INFO("Attempting to post cache with count: " << count);
+    mIoService.post([this, count]
+    {
+        std::vector<std::pair<std::string, std::string>> caches;
+        mCacheRef->pop(caches, count);
+
+        for (auto& entry : caches)
+        {
+            LOG_DEBUG("Attempting to post cached event to: " << entry.first << " with json: " << entry.second);
+            mIoService.post([this, entry]
+            {
+                if (mCurlRef->sendEvent(entry.first, entry.second))
+                    mCacheRef->remove(entry.first, entry.second);
+            });
+        }
+    });
+}
+
+void Core::flush()
+{
+    shutdown();
+    respawn();
 }
 
 unsigned Core::useCount()

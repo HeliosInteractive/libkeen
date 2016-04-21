@@ -22,6 +22,8 @@ private:
 
 private:
     explicit                    Core();
+    void                        respawn();
+    void                        shutdown();
     static CoreRef              instance(AccessType);
 
 private:
