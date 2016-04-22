@@ -58,13 +58,4 @@ private:
     std::string         mWriteKey;
 };
 
-/*
- * @class ClientReach
- * @brief Sends Metrics data to Helios Reach server
- */
-class ClientReach final : public Client
-{
-    std::string getEndpoint(const std::string& collection) const override;
-};
-
 }

@@ -86,11 +86,4 @@ std::string ClientKeenIO::getEndpoint(const std::string& collection) const
     return ss.str();
 }
 
-std::string ClientReach::getEndpoint(const std::string& collection) const
-{
-    /* to do */
-
-    return "invalid";
-}
-
 }

@@ -24,19 +24,9 @@ LIBKEEN_API void* libkeen_client_keenio_make(void) {
     return static_cast<void*>(new libkeen::ClientKeenIO);
 }
 
-LIBKEEN_API void* libkeen_client_reach_make(void) {
-    return static_cast<void*>(new libkeen::ClientReach);
-}
-
 LIBKEEN_API void libkeen_client_keenio_free(void* instance) {
     if (!instance) return;
     if (auto ptr = reinterpret_cast<libkeen::ClientKeenIO*>(instance))
-        delete ptr;
-}
-
-LIBKEEN_API void libkeen_client_reach_free(void* instance) {
-    if (!instance) return;
-    if (auto ptr = reinterpret_cast<libkeen::ClientReach*>(instance))
         delete ptr;
 }
 
@@ -68,6 +58,10 @@ LIBKEEN_API void libkeen_core_flush(void) {
 
 LIBKEEN_API void libkeen_core_release(void) {
     libkeen::internal::Core::instance()->release();
+}
+
+LIBKEEN_API void libkeen_core_post_cache(int count) {
+    libkeen::internal::Core::instance()->postCache(static_cast<unsigned>(count));
 }
 
 #ifdef __cplusplus
