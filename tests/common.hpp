@@ -5,7 +5,13 @@
 #endif
 
 #include "catch.hpp"
+
+#include "keen.hpp"
+#include "keen/client.hpp"
+
+#include "internal/core.hpp"
 #include "internal/curl.hpp"
+#include "internal/cache.hpp"
 
 #include <string>
 #include <thread>
@@ -61,9 +67,31 @@ struct ScopedTestServer
 {
     ScopedTestServer(libkeen::internal::Curl& curl) : mCurl(curl) {};
     ~ScopedTestServer() { mCurl.sendEvent(TestServer::address(TestServer::Condition::Shutdown), ""); };
+    int count()
+    {
+        std::string reply;
+        mCurl.sendEvent(TestServer::address(TestServer::Condition::Count), "", reply);
+        return std::stoi(reply);
+    }
+    void clear()
+    {
+        mCurl.sendEvent(TestServer::address(TestServer::Condition::Clear), "");
+    }
+    void shortCircuit()
+    {
+        mCurl.sendEvent(TestServer::address(TestServer::Condition::ShortCircuit), "");
+    }
 
 private:
     libkeen::internal::Curl& mCurl;
+};
+
+class ClientTest : public libkeen::Client
+{
+    virtual std::string getEndpoint(const std::string& collection) const override
+    {
+        return "http://localhost:8080/" + collection;
+    }
 };
 
 }
