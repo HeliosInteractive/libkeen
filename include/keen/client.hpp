@@ -20,6 +20,26 @@ public:
     virtual             ~Client();
     //! Send an event to a Metric endpoint.
     void                sendEvent(const std::string& collection, const std::string& json);
+    //! Append custom headers to every request
+
+protected:
+    //! Client sub-classes have a chance to provide their own end-point
+    virtual std::string getEndpoint(const std::string& collection) const = 0;
+
+protected:
+    mutable std::mutex  mClientLock;
+    CoreRef             mCoreRef;
+};
+
+/*
+ * @class ClientKeenIO
+ * @brief Project ID and Write key is obtained from
+ *        Keen IO's dashboard.
+ */
+class ClientKeenIO final : public Client
+{
+public:
+    ClientKeenIO();
     //! Sets project ID associated with this client
     void                setProjectId(const std::string& id);
     //! Sets Write Key associated with this client
@@ -30,33 +50,12 @@ public:
     std::string         getWriteKey() const;
 
 protected:
-    //! Client sub-classes have a chance to provide their own end-point
-    virtual std::string getEndpoint(const std::string& collection) const = 0;
+    //! returns Keen IO specific endpoint
+    std::string         getEndpoint(const std::string& collection) const override;
 
-protected:
-    mutable std::mutex  mClientLock;
-    CoreRef             mCoreRef;
+private:
     std::string         mProjectId;
     std::string         mWriteKey;
-};
-
-/*
- * @class ClientKeenIO
- * @brief Project ID and Write key is obtained from
- *        Keen IO's dashboard.
- */
-class ClientKeenIO final : public Client
-{
-    std::string getEndpoint(const std::string& collection) const override;
-};
-
-/*
- * @class ClientReach
- * @brief Sends Metrics data to Helios Reach server
- */
-class ClientReach final : public Client
-{
-    std::string getEndpoint(const std::string& collection) const override;
 };
 
 }
