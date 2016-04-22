@@ -148,6 +148,24 @@ void Core::flush()
     respawn();
 }
 
+void Core::enableLogToFile(bool on /*= true*/)
+{
+    for (auto logger : mLoggerRefs)
+        if (logger) logger->enableLogToFile(on);
+}
+
+void Core::enableLogToConsole(bool on /*= true*/)
+{
+    for (auto logger : mLoggerRefs)
+        if (logger) logger->enableLogToConsole(on);
+}
+
+void Core::clearCache()
+{
+    if (mCacheRef)
+        mCacheRef->clear();
+}
+
 unsigned Core::useCount()
 {
     if (!instance(AccessType::Current)) return 0;
