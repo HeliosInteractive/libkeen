@@ -53,11 +53,14 @@
 
         /// <summary>
         /// Sends a raw event to Keen IO
+        /// This is the method that all other overloads go through,
+        /// it appends current computer's timestamp to the end of json.
         /// </summary>
         /// <param name="collection">Name of the Keen IO collection</param>
         /// <param name="json">JSON data of the event</param>
         public virtual void SendEvent(string collection, string json)
         {
+            AppendTimestamp(ref json);
             m_Bindings.SendEvent(collection, json);
         }
 
@@ -72,10 +75,22 @@
             SendEvent(collection, Serialize(event_data));
         }
 
+        /// <summary>
+        /// Clears all cached events
+        /// </summary>
+        public static void ClearCache()
+        {
+            Bindings.ClearCache();
+        }
+
         void Awake()
         {
             // Allocate native instance
             m_Bindings = new Bindings();
+
+            // Configure logging
+            Bindings.LogToConsole   = false;
+            Bindings.LogToFile      = true;
         }
 
         void Start()
@@ -97,7 +112,7 @@
             yield return new WaitForSeconds(CacheInterval);
         }
 
-        public void OnApplicationQuit()
+        void OnApplicationQuit()
         {
             if (!s_HandledQuit)
             {
@@ -106,6 +121,25 @@
                 Bindings.Release();
                 s_HandledQuit = true;
             }
+        }
+
+        void AppendTimestamp(ref string data)
+        {
+            if (string.IsNullOrEmpty(data))
+            {
+                Debug.LogError("[Keen] JSON string to be sent is empty.");
+                return;
+            }
+
+            data = data.Trim();
+
+            if (!data.EndsWith("}"))
+            {
+                Debug.LogError("[Keen] your JSON string is not a valid object. Your string must end with a curly bracket.");
+                return;
+            }
+
+            data = string.Format("{0},\"keen\":{{\"timestamp\":\"{1}\"}}}}", data.Remove(data.Length - 1, 1), string.Concat(DateTime.UtcNow.ToString("s"), "Z"));
         }
 
         #region Basic JSON serializer
@@ -214,6 +248,16 @@
                 }
             }
 
+            public static bool LogToConsole
+            {
+                set { libkeen_core_enable_console_logging(value); }
+            }
+
+            public static bool LogToFile
+            {
+                set { libkeen_core_enable_file_logging(value); }
+            }
+
             public void SendEvent(string collection, string json)
             {
                 libkeen_client_send_event(m_NativeInstance, collection, json);
@@ -234,6 +278,11 @@
                 libkeen_core_post_cache(count);
             }
 
+            static public void ClearCache()
+            {
+                libkeen_core_clear_cache();
+            }
+
             #region Native API
             [DllImport("libkeen")]
             public static extern int libkeen_version_major();
@@ -251,13 +300,13 @@
             public static extern void libkeen_client_keenio_free(IntPtr ptr);
 
             [DllImport("libkeen")]
-            public static extern void libkeen_client_keenio_set_project_id(IntPtr ptr, string val);
+            public static extern void libkeen_client_keenio_set_project_id(IntPtr ptr, [MarshalAs(UnmanagedType.LPStr)] string val);
 
             [DllImport("libkeen")]
-            public static extern void libkeen_client_keenio_set_write_key(IntPtr ptr, string val);
+            public static extern void libkeen_client_keenio_set_write_key(IntPtr ptr, [MarshalAs(UnmanagedType.LPStr)] string val);
 
             [DllImport("libkeen")]
-            public static extern void libkeen_client_send_event(IntPtr ptr, string col, string json);
+            public static extern void libkeen_client_send_event(IntPtr ptr, [MarshalAs(UnmanagedType.LPStr)] string col, [MarshalAs(UnmanagedType.LPStr)] string json);
 
             [DllImport("libkeen")]
             public static extern void libkeen_core_flush();
@@ -267,6 +316,15 @@
 
             [DllImport("libkeen")]
             public static extern void libkeen_core_post_cache(int count);
+
+            [DllImport("libkeen")]
+            public static extern void libkeen_core_clear_cache();
+
+            [DllImport("libkeen")]
+            public static extern void libkeen_core_enable_file_logging([MarshalAs(UnmanagedType.Bool)] bool on);
+
+            [DllImport("libkeen")]
+            public static extern void libkeen_core_enable_console_logging([MarshalAs(UnmanagedType.Bool)] bool on);
             #endregion
 
             #region IDisposable Support
