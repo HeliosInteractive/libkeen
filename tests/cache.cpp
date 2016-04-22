@@ -1,8 +1,6 @@
 #include "common.hpp"
 #include "asio.hpp"
 
-#include "internal/cache.hpp"
-
 SCENARIO("Cache functionality", "[cache]")
 {
     std::vector<std::pair<std::string, std::string>> records;
