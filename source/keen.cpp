@@ -4,10 +4,6 @@
 #include "keen/client.hpp"
 #include "internal/core.hpp"
 
-namespace {
-static const char* INVALID_STR{ "invalid" };
-} // namespace
-
 #ifdef __cplusplus
 extern "C" {
 #endif // __cplusplus
@@ -50,27 +46,10 @@ LIBKEEN_API void libkeen_client_keenio_set_project_id(void* instance, const char
         ptr->setProjectId(id);
 }
 
-LIBKEEN_API const char* libkeen_client_keenio_get_project_id(void* instance)
-{
-    if (!instance) return INVALID_STR;
-    if (auto ptr = reinterpret_cast<libkeen::ClientKeenIO*>(instance))
-        return ptr->getProjectId().c_str();
-    else return INVALID_STR;
-    
-}
-
 LIBKEEN_API void libkeen_client_keenio_set_write_key(void* instance, const char* key) {
     if (!key) return;
     if (auto ptr = reinterpret_cast<libkeen::ClientKeenIO*>(instance))
         ptr->setWriteKey(key);
-}
-
-LIBKEEN_API const char* libkeen_client_keenio_get_write_key(void* instance)
-{
-    if (!instance) return INVALID_STR;
-    if (auto ptr = reinterpret_cast<libkeen::ClientKeenIO*>(instance))
-        return ptr->getWriteKey().c_str();
-    else return INVALID_STR;
 }
 
 LIBKEEN_API void libkeen_client_send_event(void* instance, const char* collection, const char* json) {
