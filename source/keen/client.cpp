@@ -9,12 +9,12 @@ namespace libkeen
 Client::Client()
     : mCoreRef(internal::Core::instance())
 {
-    LOG_DEBUG("Cliant instance is initialized.");
+    LOG_DEBUG("Client instance is initialized.");
 }
 
 Client::~Client()
 {
-    LOG_DEBUG("Cliant instance is destructed.");
+    LOG_DEBUG("Client instance is destructed.");
 }
 
 void Client::sendEvent(const std::string& collection, const std::string& json)
