@@ -8,8 +8,6 @@ namespace libkeen
 
 Client::Client()
     : mCoreRef(internal::Core::instance())
-    , mProjectId("invalid")
-    , mWriteKey("invalid")
 {
     LOG_DEBUG("Cliant instance is initialized.");
 }
@@ -30,7 +28,14 @@ void Client::sendEvent(const std::string& collection, const std::string& json)
     mCoreRef->postEvent(getEndpoint(collection), json);
 }
 
-void Client::setProjectId(const std::string& id)
+ClientKeenIO::ClientKeenIO()
+    : mProjectId("invalid")
+    , mWriteKey("invalid")
+{
+    /* no-op */
+}
+
+void ClientKeenIO::setProjectId(const std::string& id)
 {
     if (id.empty())
     {
@@ -42,7 +47,7 @@ void Client::setProjectId(const std::string& id)
     mProjectId = id;
 }
 
-void Client::setWriteKey(const std::string& key)
+void ClientKeenIO::setWriteKey(const std::string& key)
 {
     if (key.empty())
     {
@@ -54,13 +59,13 @@ void Client::setWriteKey(const std::string& key)
     mWriteKey = key;
 }
 
-std::string Client::getProjectId() const
+std::string ClientKeenIO::getProjectId() const
 {
     std::lock_guard<decltype(mClientLock)> lock(mClientLock);
     return mProjectId;
 }
 
-std::string Client::getWriteKey() const
+std::string ClientKeenIO::getWriteKey() const
 {
     std::lock_guard<decltype(mClientLock)> lock(mClientLock);
     return mWriteKey;

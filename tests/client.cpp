@@ -18,18 +18,6 @@ SCENARIO("Client functionality", "[client]")
         ClientTest  client;
         sts.clear();
 
-        THEN("Properties are set.")
-        {
-            std::string id  = "id";
-            std::string key = "key";
-
-            client.setProjectId(id);
-            client.setWriteKey(key);
-
-            REQUIRE(client.getProjectId() == id);
-            REQUIRE(client.getWriteKey() == key);
-        }
-
         THEN("An event is sent successfully.")
         {
             REQUIRE(sts.count() == 0);
