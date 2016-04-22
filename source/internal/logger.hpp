@@ -29,11 +29,15 @@ public:
     ~Logger();
     Logger              (const std::string& type);
     void                log(const std::string& message);
+    void                enableLogToFile(bool on = true);
+    void                enableLogToConsole(bool on = true);
     static void         pull(std::vector<LoggerRef>& container);
 
 private:
     std::mutex          mMutex;
     const std::string   mType;
+    bool                mLogToConsole;
+    bool                mLogToFile;
 };
 
 namespace loggers
