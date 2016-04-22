@@ -31,13 +31,32 @@ public:
 
 protected:
     //! Client sub-classes have a chance to provide their own end-point
-    virtual std::string getEndpoint(const std::string& collection) const;
+    virtual std::string getEndpoint(const std::string& collection) const = 0;
 
-private:
+protected:
     mutable std::mutex  mClientLock;
     CoreRef             mCoreRef;
     std::string         mProjectId;
     std::string         mWriteKey;
+};
+
+/*
+ * @class ClientKeenIO
+ * @brief Project ID and Write key is obtained from
+ *        Keen IO's dashboard.
+ */
+class ClientKeenIO final : public Client
+{
+    std::string getEndpoint(const std::string& collection) const override;
+};
+
+/*
+ * @class ClientReach
+ * @brief Sends Metrics data to Helios Reach server
+ */
+class ClientReach final : public Client
+{
+    std::string getEndpoint(const std::string& collection) const override;
 };
 
 }

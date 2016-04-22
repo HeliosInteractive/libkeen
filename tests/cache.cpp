@@ -1,49 +1,86 @@
 #include "common.hpp"
+#include "asio.hpp"
 
-#include "internal/cache.hpp"
-
-TEST_CASE("Cache Check", "[cache]")
+SCENARIO("Cache functionality", "[cache]")
 {
-    using namespace libkeen::internal;
+    std::vector<std::pair<std::string, std::string>> records;
+    std::string key = "key";
+    std::string val = "val";
 
-    Cache cache_ref;
-    
-    REQUIRE(cache_ref.connected());
+    GIVEN("An instance of Cache class")
+    {
+        using namespace libkeen::internal;
+        
+        Cache cache;
 
-    cache_ref.clear();
+        REQUIRE(cache.connected());
+        
+        cache.clear();
+        REQUIRE(cache.count() == 0);
 
-    std::string event_name = "name1";
-    std::string event_data = "data1";
-    
-    std::string event_name_2 = "name2";
-    std::string event_data_2 = "data2";
+        THEN("A record is pushed")
+        {
+            cache.push(key, val);
+            REQUIRE(cache.count() == 1);
+            REQUIRE(cache.exists(key, val));
+        }
 
-    cache_ref.push(event_name, event_data);
-    REQUIRE(cache_ref.exists(event_name, event_data));
+        THEN("A record is popped")
+        {
+            cache.push(key, val);
+            cache.pop(records, 10);
 
-    std::vector<std::pair<std::string, std::string>> holder;
-    cache_ref.pop(holder, 1);
+            REQUIRE(records.size() == 1);
+            REQUIRE(records.back().first == key);
+            REQUIRE(records.back().second == val);
+            REQUIRE(cache.exists(key, val));
+        }
 
-    REQUIRE(holder.size() == 1);
-    REQUIRE(holder.back().first == event_name);
-    REQUIRE(holder.back().second == event_data);
+        THEN("A record is removed")
+        {
+            cache.push(key, val);
+            REQUIRE(cache.exists(key, val));
 
-    cache_ref.pop(holder, 10);
-    REQUIRE(holder.size() == 1);
-    REQUIRE(holder.back().first == event_name);
-    REQUIRE(holder.back().second == event_data);
+            cache.remove(key, val);
+            REQUIRE(cache.count() == 0);
+            REQUIRE(!cache.exists(key, val));
+        }
 
-    cache_ref.push(event_name_2, event_data_2);
-    REQUIRE(cache_ref.exists(event_name_2, event_data_2));
+        THEN("50 records are pushed single threaded")
+        {
+            REQUIRE(cache.count() == 0);
 
-    cache_ref.pop(holder, 10);
-    REQUIRE(holder.size() == 2);
+            int count = 50;
+            for (int index = 0; index < count; ++index)
+                cache.push(key + std::to_string(index), val + std::to_string(index));
 
-    REQUIRE(holder.front().first == event_name);
-    REQUIRE(holder.front().second == event_data);
-    REQUIRE(holder.back().first == event_name_2);
-    REQUIRE(holder.back().second == event_data_2);
+            REQUIRE(cache.count() == count);
 
-    cache_ref.remove(event_name, event_data);
-    REQUIRE(!cache_ref.exists(event_name, event_data));
+            cache.clear();
+            REQUIRE(cache.count() == 0);
+        }
+
+        THEN("50 records are pushed multi threaded")
+        {
+            REQUIRE(cache.count() == 0);
+
+            asio::io_service service;
+
+            int count = 50;
+            for (int index = 0; index < count; ++index)
+                service.post([=, &cache] { cache.push(key + std::to_string(index), val + std::to_string(index)); });
+
+            std::vector<std::thread> pool;
+            for (unsigned t = 0; t < std::thread::hardware_concurrency(); ++t)
+                pool.push_back(std::thread([&service] { service.run(); }));
+
+            service.run();
+
+            for (auto& worker : pool)
+                if (worker.joinable())
+                    worker.join();
+
+            REQUIRE(cache.count() == count);
+        }
+    }
 }

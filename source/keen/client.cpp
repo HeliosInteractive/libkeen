@@ -66,7 +66,7 @@ std::string Client::getWriteKey() const
     return mWriteKey;
 }
 
-std::string Client::getEndpoint(const std::string& collection) const
+std::string ClientKeenIO::getEndpoint(const std::string& collection) const
 {
     std::lock_guard<decltype(mClientLock)> lock(mClientLock);
 
@@ -77,7 +77,15 @@ std::string Client::getEndpoint(const std::string& collection) const
         << collection
         << "?api_key="
         << mWriteKey;
+
     return ss.str();
+}
+
+std::string ClientReach::getEndpoint(const std::string& collection) const
+{
+    /* to do */
+
+    return "invalid";
 }
 
 }
