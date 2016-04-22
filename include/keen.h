@@ -15,6 +15,10 @@
  /* We are building or calling libkeen as a static library */
  #define LIBKEEN_API
 #endif
+
+#define LIBKEEN_BOOL_FALSE 0
+#define LIBKEEN_BOOL_TRUE  1
+
 //! @endcond
 
 #ifdef __cplusplus
@@ -33,6 +37,9 @@ LIBKEEN_API int     libkeen_core_use_count(void);
 LIBKEEN_API void    libkeen_core_flush(void);
 LIBKEEN_API void    libkeen_core_release(void);
 LIBKEEN_API void    libkeen_core_post_cache(int count);
+LIBKEEN_API void    libkeen_core_clear_cache(void);
+LIBKEEN_API void    libkeen_core_enable_file_logging(int on);
+LIBKEEN_API void    libkeen_core_enable_console_logging(int on);
 
 #ifdef __cplusplus
 } // extern "C"
