@@ -39,6 +39,8 @@ Logger::~Logger()
 
 Logger::Logger(const std::string& type)
     : mType(type)
+    , mLogToFile(true)
+    , mLogToConsole(true)
 {
     log("Logger " + mType + " is started.");
 }
@@ -56,11 +58,17 @@ void Logger::log(const std::string& message)
             << message << std::endl;
 
 #if LIBKEEN_LOG_TO_CONSOLE
-        std::cout << msg.str();
+        if (mLogToConsole)
+        {
+            std::cout << msg.str();
+        }
 #endif // LIBKEEN_LOG_TO_CONSOLE
 
 #if LIBKEEN_LOG_TO_LOGFILE
-        std::ofstream("libkeen.log", std::ios_base::app | std::ios_base::out) << msg.str();
+        if (mLogToFile)
+        {
+            std::ofstream("libkeen.log", std::ios_base::app | std::ios_base::out) << msg.str();
+        }
 #endif // LIBKEEN_LOG_TO_LOGFILE
 
     }
@@ -72,6 +80,18 @@ void Logger::log(const std::string& message)
     }
 
 #endif
+}
+
+void Logger::enableLogToFile(bool on /*= true*/)
+{
+    std::lock_guard<decltype(mMutex)> lock(mMutex);
+    mLogToFile = on;
+}
+
+void Logger::enableLogToConsole(bool on /*= true*/)
+{
+    std::lock_guard<decltype(mMutex)> lock(mMutex);
+    mLogToConsole = on;
 }
 
 void Logger::pull(std::vector<LoggerRef>& container)

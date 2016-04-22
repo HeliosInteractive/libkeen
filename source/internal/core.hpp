@@ -13,6 +13,11 @@ public:
     void                        postEvent(const std::string& url, const std::string& json);
     void                        postCache(unsigned count);
     void                        flush();
+    void                        enableLogToFile(bool on = true);
+    void                        enableLogToConsole(bool on = true);
+    void                        clearCache();
+
+public:
     static unsigned             useCount();
     static CoreRef              instance();
     static void                 release();
