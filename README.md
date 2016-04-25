@@ -25,3 +25,4 @@ Tests can be invoked via [CTest](https://cmake.org/cmake/help/v3.0/manual/ctest.
 ## Language bindings
 
  - [Unity3D C#](bindings/unity)
+ - [Node.JS JS](bindings/node)
