@@ -3,10 +3,17 @@
 	"version": "1.0.0",
 	"description": "Node.js loader of LibKeen",
 	"main": "libkeen.js",
-	"private": true,
 	"dependencies": {
 		"bindings": "~1.2.1",
 		"nan": "^2.0.0"
 	},
-	"gypfile": true
+	"gypfile": true,
+	"repository": {
+		"type": "git",
+		"url": "https://github.com/HeliosInteractive/libkeen"
+	},
+	"bugs": {
+		"url": "https://github.com/HeliosInteractive/libkeen/issues"
+	},
+	"homepage": "https://github.com/HeliosInteractive/libkeen"
 }
