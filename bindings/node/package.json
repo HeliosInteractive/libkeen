@@ -1,0 +1,12 @@
+{
+	"name": "libkeen",
+	"version": "1.0.0",
+	"description": "Node.js loader of LibKeen",
+	"main": "libkeen.js",
+	"private": true,
+	"dependencies": {
+		"bindings": "~1.2.1",
+		"nan": "^2.0.0"
+	},
+	"gypfile": true
+}
